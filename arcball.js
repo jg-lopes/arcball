@@ -24,10 +24,23 @@ scene.add( cube );
 
 camera.position.z = 3;
 
+document.addEventListener('mousedown', onDocumentMouseDown, true);
+
+var mouse = new THREE.Vector2();
+
+function onDocumentMouseDown(event) {
+    
+    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+    mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+    
+    console.log(mouse.x, mouse.y);
+}
+
+
 var animate = function () {
     requestAnimationFrame( animate );
 
-    //cube.rotation.x += 0.01;
+    cube.rotation.x += 0.01;
     cube.rotation.y += 0.01;
 
     renderer.render( scene, camera );
