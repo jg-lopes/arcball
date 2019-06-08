@@ -24,18 +24,52 @@ scene.add( cube );
 
 camera.position.z = 3;
 
-document.addEventListener('mousedown', onDocumentMouseDown, true);
+// ARCBALL INTERACTION
 
 var mouse = new THREE.Vector2();
+var last = new THREE.Vector2();
+var cur = new THREE.Vector2();
+var arcball_on = false;
+
+document.addEventListener('mousedown', onDocumentMouseDown);
+document.addEventListener('mousemove', onDocumentMouseMove);
+document.addEventListener('mouseup', onDocumentMouseUp);
 
 function onDocumentMouseDown(event) {
     
     mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
     mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
     
-    console.log(mouse.x, mouse.y);
+    arcball_on = true;
+    last.x = cur.x = mouse.x;
+    last.y = cur.y = mouse.y;   
 }
 
+function onDocumentMouseUp(event) {
+    arcball_on = false;
+}
+
+function onDocumentMouseMove(event) {
+
+    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+    mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+    if (arcball_on) {
+        cur.x = mouse.x;
+        cur.y = mouse.y;
+    }
+
+}
+
+// void onMouse(int button, int state, int x, int y) {
+//     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+//       arcball_on = true;
+//       last_mx = cur_mx = x;
+//       last_my = cur_my = y;
+//     } else {
+//       arcball_on = false;
+//     }
+//   }
 
 var animate = function () {
     requestAnimationFrame( animate );
