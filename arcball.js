@@ -61,21 +61,38 @@ function onDocumentMouseMove(event) {
 
 }
 
-// void onMouse(int button, int state, int x, int y) {
-//     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-//       arcball_on = true;
-//       last_mx = cur_mx = x;
-//       last_my = cur_my = y;
-//     } else {
-//       arcball_on = false;
-//     }
-//   }
+function getArcballVector(vector2) {
+    P = new THREE.Vector3();
+    P.x = vector2.x;
+    P.y = vector2.y;
+
+    OP_squared = P.x * P.x + P.y * P.y;
+    P.z = Math.sqrt(1.0 - OP_squared);
+
+    return P;
+}
+
+var angle;
+var axis = new THREE.Vector3();
 
 var animate = function () {
     requestAnimationFrame( animate );
 
-    cube.rotation.x += 0.01;
-    cube.rotation.y += 0.01;
+    if ((cur.x != last.x || cur.y != last.y)) {
+        va = getArcballVector(cur);
+        vb = getArcballVector(last);
+
+        angle = Math.acos(Math.min(1, va.dot(vb)));
+        axis = va.cross(vb);
+
+        cube.rotation.x += angle * axis.x;
+        cube.rotation.y += angle * axis.y;
+        cube.rotation.z += angle * axis.z;
+
+
+    }
+
+    // cube.rotation.x += 0.01
 
     renderer.render( scene, camera );
 };
