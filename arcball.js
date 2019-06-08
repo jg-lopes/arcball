@@ -31,6 +31,13 @@ var last = new THREE.Vector2();
 var cur = new THREE.Vector2();
 var arcball_on = false;
 
+var cubeState = new THREE.Vector3();
+cubeState.x = 0;
+cubeState.y = 0;
+cubeState.z = 0;
+
+
+
 document.addEventListener('mousedown', onDocumentMouseDown);
 document.addEventListener('mousemove', onDocumentMouseMove);
 document.addEventListener('mouseup', onDocumentMouseUp);
@@ -47,6 +54,10 @@ function onDocumentMouseDown(event) {
 
 function onDocumentMouseUp(event) {
     arcball_on = false;
+
+    cubeState.x = cube.rotation.x;
+    cubeState.y = cube.rotation.y;
+    cubeState.z = cube.rotation.z;
 }
 
 function onDocumentMouseMove(event) {
@@ -67,7 +78,12 @@ function getArcballVector(vector2) {
     P.y = vector2.y;
 
     OP_squared = P.x * P.x + P.y * P.y;
-    P.z = Math.sqrt(1.0 - OP_squared);
+
+    if (OP_squared <= 1 ){
+        P.z = Math.sqrt(1.0 - OP_squared);
+    } else {
+        P.normalize();
+    }
 
     return P;
 }
@@ -84,14 +100,17 @@ var animate = function () {
 
         angle = Math.acos(Math.min(1, va.dot(vb)));
         axis = va.cross(vb);
-
-        cube.rotation.x += angle * axis.x;
-        cube.rotation.y += angle * axis.y;
-        cube.rotation.z += angle * axis.z;
-
-
     }
 
+    if (arcball_on) {
+        cube.rotation.x = angle * axis.x;
+        cube.rotation.y = angle * axis.y;
+        cube.rotation.z = angle * axis.z;
+
+        cube.rotation.x += cubeState.x;
+        cube.rotation.y += cubeState.y;
+        cube.rotation.z += cubeState.z;
+    } 
     // cube.rotation.x += 0.01
 
     renderer.render( scene, camera );
