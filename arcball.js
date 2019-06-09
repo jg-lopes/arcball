@@ -1,5 +1,6 @@
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
+//var camera = new THREE.OrthographicCamera();
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
@@ -31,16 +32,42 @@ var last = new THREE.Vector2();
 var cur = new THREE.Vector2();
 var arcball_on = false;
 
-var cubeState = new THREE.Vector3();
-cubeState.x = 0;
-cubeState.y = 0;
-cubeState.z = 0;
 
+var angle;
+var axis = new THREE.Vector3();
+var quaternion = new THREE.Quaternion();
 
+var prevQuaternion = new THREE.Quaternion(); 
 
 document.addEventListener('mousedown', onDocumentMouseDown);
 document.addEventListener('mousemove', onDocumentMouseMove);
 document.addEventListener('mouseup', onDocumentMouseUp);
+
+animate();
+
+
+function toRadians(angle) {
+	return angle * (Math.PI / 180);
+}
+
+
+function getArcballVector(vector2) {
+    P = new THREE.Vector3();
+    P.x = vector2.x;
+    P.y = vector2.y;
+    P.z = 0 
+
+    OP_squared = P.x * P.x + P.y * P.y;
+
+    if (OP_squared <= 1 ){
+        P.z = Math.sqrt(1 - OP_squared);
+    } else {
+        P = P.normalize();
+    }
+
+    return P;
+}
+
 
 function onDocumentMouseDown(event) {
     
@@ -55,65 +82,33 @@ function onDocumentMouseDown(event) {
 function onDocumentMouseUp(event) {
     arcball_on = false;
 
-    cubeState.x = cube.rotation.x;
-    cubeState.y = cube.rotation.y;
-    cubeState.z = cube.rotation.z;
+    prevQuaternion = quaternion;
 }
 
 function onDocumentMouseMove(event) {
 
-    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-    mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+    mouse.x = ( event.clientX / window.innerWidth  * 2 - 1 );
+    mouse.y = - ( event.clientY / window.innerHeight  * 2 - 1);
 
     if (arcball_on) {
         cur.x = mouse.x;
         cur.y = mouse.y;
-    }
 
-}
+        va = getArcballVector(last);
+        vb = getArcballVector(cur);
 
-function getArcballVector(vector2) {
-    P = new THREE.Vector3();
-    P.x = vector2.x;
-    P.y = vector2.y;
-
-    OP_squared = P.x * P.x + P.y * P.y;
-
-    if (OP_squared <= 1 ){
-        P.z = Math.sqrt(1.0 - OP_squared);
-    } else {
-        P.normalize();
-    }
-
-    return P;
-}
-
-var angle;
-var axis = new THREE.Vector3();
-
-var animate = function () {
-    requestAnimationFrame( animate );
-
-    if ((cur.x != last.x || cur.y != last.y)) {
-        va = getArcballVector(cur);
-        vb = getArcballVector(last);
-
-        angle = Math.acos(Math.min(1, va.dot(vb)));
+        angle = toRadians((Math.acos(Math.min(1.0, va.dot(vb)))));
         axis = va.cross(vb);
+
+        quaternion.setFromAxisAngle(axis, angle);
+        cube.quaternion.multiplyQuaternions(quaternion, cube.quaternion);
+
+        
     }
+}
 
-    if (arcball_on) {
-        cube.rotation.x = angle * axis.x;
-        cube.rotation.y = angle * axis.y;
-        cube.rotation.z = angle * axis.z;
 
-        cube.rotation.x += cubeState.x;
-        cube.rotation.y += cubeState.y;
-        cube.rotation.z += cubeState.z;
-    } 
-    // cube.rotation.x += 0.01
-
+function animate() {
+    requestAnimationFrame( animate );
     renderer.render( scene, camera );
 };
-
-animate();
