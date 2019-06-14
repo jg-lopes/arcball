@@ -7,11 +7,9 @@ var frustumSize = 2;
 
 var lastMouse = new THREE.Vector2();
 var curMouse = new THREE.Vector2();
-var offset = new THREE.Vector3();
-var scale = new THREE.Vector2();
 var quaternion = new THREE.Quaternion();
 
-var object;
+var interactiveBox;
 
 init();
 animate();
@@ -35,7 +33,7 @@ function init() {
 
 
     // Introducing the cube + arcball visualization object
-    object = new THREE.Object3D();
+    interactiveBox = new THREE.Object3D();
 
     // Cube
     var geometry = new THREE.BoxGeometry( 1, 1, 1);
@@ -48,22 +46,22 @@ function init() {
         geometry.faces[ i + 1 ].color.set( color);
     }
     var material = new THREE.MeshBasicMaterial( { color: 0xffffff, vertexColors: THREE.FaceColors } );
-    var cube = new THREE.Mesh( geometry, material );
-    object.add( cube );
+    var box = new THREE.Mesh( geometry, material );
+    interactiveBox.add( box );
 
     // Sphere
     var sphereGeom = new THREE.SphereGeometry(1, 100, 100);
     var blueMaterial = new THREE.MeshBasicMaterial( { color: 0x000000, transparent: true, opacity: 0.3 } );
     var sphere = new THREE.Mesh( sphereGeom, blueMaterial );
-    object.add(sphere);
+    interactiveBox.add(sphere);
     
-    scene.add(object);
+    scene.add(interactiveBox);
 
 
-
-    
-    offset.set(0, 0, 0);
-    scale.set(1, 1);
+    interactiveBox.scale.set(0.5, 0.5, 0.5);
+    interactiveBox.translateX(-0.5);
+    interactiveBox.translateY(-0.5);
+    interactiveBox.translateZ(-10);
 
 
 
@@ -77,14 +75,16 @@ function init() {
 }
 
 
-function experimentalBall(mouseEvent, offset, scale) {
+function getArcballVector(mouseEvent, object) {
     P = new THREE.Vector3();
     windowCoord = new THREE.Vector2();
 
-    windowMinSize = Math.min(window.innerWidth, window.innerHeight);
+    offset = object.position;
+    scale = object.scale;
 
-    // windowCoord.x = ( mouseEvent.x / window.innerWidth ) * 2 - 1
-    // windowCoord.y = - ( mouseEvent.y / window.innerHeight ) * 2 + 1
+    // Adjusting the mouse coordinates to the window coordinates
+    // Respecting the aspect size of the screen
+    windowMinSize = Math.min(window.innerWidth, window.innerHeight);
 
     windowCoord.x = - window.innerWidth / 2;
     windowCoord.y = - window.innerHeight / 2; 
@@ -130,14 +130,14 @@ function onDocumentMouseMove( event ) {
     if (isClicking) {
        
 
-        va = experimentalBall(lastMouse, offset, scale);
-        vb = experimentalBall(curMouse, offset, scale);
+        va = getArcballVector(lastMouse, interactiveBox);
+        vb = getArcballVector(curMouse, interactiveBox);
 
         var angle = Math.acos(Math.min(1, va.dot(vb) / va.length() /vb.length()));
         var axis = va.cross(vb).normalize();
 
         quaternion.setFromAxisAngle(axis, angle);
-        object.quaternion.multiplyQuaternions(quaternion, object.quaternion);
+        interactiveBox.quaternion.multiplyQuaternions(quaternion, interactiveBox.quaternion);
 
         
     }
