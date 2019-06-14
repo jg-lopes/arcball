@@ -53,14 +53,18 @@ function toRadians(angle) {
 
 function getArcballVector(vector2) {
     P = new THREE.Vector3();
-    P.x = vector2.x;
-    P.y = vector2.y;
-    P.z = 0 
+    
+    P.set(
+        ( vector2.x / window.innerWidth ) * 2 - 1,
+        - ( vector2.y / window.innerHeight ) * 2 + 1,
+        0 ); 
+    
+    
 
-    OP_squared = P.x * P.x + P.y * P.y;
+    OP_length = P.length();
 
-    if (OP_squared <= 1 ){
-        P.z = Math.sqrt(1 - OP_squared);
+    if (OP_length <= 1 ){
+        P.z = Math.sqrt(1 - OP_length * OP_length);
     } else {
         P = P.normalize();
     }
@@ -71,12 +75,7 @@ function getArcballVector(vector2) {
 
 function onDocumentMouseDown(event) {
     
-    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-    mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-    
-    arcball_on = true;
-    last.x = cur.x = mouse.x;
-    last.y = cur.y = mouse.y;   
+    arcball_on = true;  
 }
 
 function onDocumentMouseUp(event) {
@@ -87,24 +86,30 @@ function onDocumentMouseUp(event) {
 
 function onDocumentMouseMove(event) {
 
-    mouse.x = ( event.clientX / window.innerWidth  * 2 - 1 );
-    mouse.y = - ( event.clientY / window.innerHeight  * 2 - 1);
-
+    cur.x = event.clientX;
+    cur.y = event.clientY;
+    
     if (arcball_on) {
-        cur.x = mouse.x;
-        cur.y = mouse.y;
+       
 
         va = getArcballVector(last);
         vb = getArcballVector(cur);
 
-        angle = toRadians((Math.acos(Math.min(1.0, va.dot(vb)))));
-        axis = va.cross(vb);
+        var angle = Math.acos(Math.min(1, va.dot(vb) / va.length() /vb.length()));
+        var axis = va.cross(vb).normalize();
 
+        console.log(angle);
         quaternion.setFromAxisAngle(axis, angle);
         cube.quaternion.multiplyQuaternions(quaternion, cube.quaternion);
 
         
     }
+
+
+    last.x = cur.x;
+    last.y = cur.y;
+
+
 }
 
 
