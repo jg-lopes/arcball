@@ -68,7 +68,9 @@ function experimentalBall(mouseEvent, offset, scale) {
     windowMinSize = Math.min(window.innerWidth, window.innerHeight);
 
     // windowCoord.x = ( mouseEvent.x / window.innerWidth ) * 2 - 1
-    // windowCoord.y = - ( mouseEvent.y / window.innerHeight ) * 2 + 1
+    // windowCoord.y = - (
+    //console.log((vector2.x) - 0.5 * (window.innerWidth / 1000) );
+    ouseEvent.y / window.innerHeight ) * 2 + 1
 
     windowCoord.x = - window.innerWidth / 2;
     windowCoord.y = - window.innerHeight / 2; 
