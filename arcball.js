@@ -1,6 +1,7 @@
 var containers;
 var camera, scene, raycaster, renderer;
 var mouse = new THREE.Vector2();
+var isClicking;
 var frustumSize = 2;
 init();
 animate();
@@ -53,8 +54,63 @@ function init() {
 
 
     document.body.appendChild( renderer.domElement );
+
+    document.addEventListener( 'mousedown', onDocumentMouseDown, false);
     document.addEventListener( 'mousemove', onDocumentMouseMove, false );
     window.addEventListener( 'resize', onWindowResize, false );
+}
+
+
+function experimentalBall(mouseEvent, offset, scale) {
+    P = new THREE.Vector3();
+    windowCoord = new THREE.Vector2();
+
+    windowMinSize = Math.min(window.innerWidth, window.innerHeight);
+
+    // windowCoord.x = ( mouseEvent.x / window.innerWidth ) * 2 - 1
+    // windowCoord.y = - ( mouseEvent.y / window.innerHeight ) * 2 + 1
+
+    windowCoord.x = - window.innerWidth / 2;
+    windowCoord.y = - window.innerHeight / 2; 
+
+    windowCoord.x += mouseEvent.x;
+    windowCoord.y += mouseEvent.y;
+
+    windowCoord.x = (windowCoord.x * 2 / windowMinSize);
+    windowCoord.y = (windowCoord.y * 2 / windowMinSize);
+    
+    P.set(
+        (windowCoord.x - offset.x) / scale.x,
+        (windowCoord.y - offset.y) / scale.y,
+        0 ); 
+
+    OP_length = P.length();
+
+    if (OP_length <= 1 ){
+        P.z = Math.sqrt(1 - OP_length * OP_length);
+    } else {
+        P = P.normalize();
+    }
+
+    return P;
+}
+
+function onDocumentMouseDown(event) {
+    event.preventDefault();
+
+    isClicking = true;
+
+    var mouseEvent = new THREE.Vector2();
+    mouseEvent.set( event.clientX, event.clientY);
+
+    var offset = new THREE.Vector3();
+    offset.set(0, 0, 0);
+
+    var scale = new THREE.Vector2();
+    scale.set(1, 1);
+
+    //experimentalBall(mouseEvent, offset, scale);
+    console.log(experimentalBall(mouseEvent, offset, scale));
 }
 
 function onWindowResize() {
@@ -73,9 +129,6 @@ function onDocumentMouseMove( event ) {
     event.preventDefault();
     mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
     mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-
-    console.log(event.clientX);
-    console.log(event.clientY);
 }
 
 function animate() {
