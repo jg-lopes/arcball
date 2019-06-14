@@ -3,6 +3,16 @@ var camera, scene, raycaster, renderer;
 var mouse = new THREE.Vector2();
 var isClicking;
 var frustumSize = 2;
+
+
+var lastMouse = new THREE.Vector2();
+var curMouse = new THREE.Vector2();
+var offset = new THREE.Vector3();
+var scale = new THREE.Vector2();
+var quaternion = new THREE.Quaternion();
+
+var object;
+
 init();
 animate();
 
@@ -25,7 +35,7 @@ function init() {
 
 
     // Introducing the cube + arcball visualization object
-    var object = new THREE.Object3D();
+    object = new THREE.Object3D();
 
     // Cube
     var geometry = new THREE.BoxGeometry( 1, 1, 1);
@@ -47,17 +57,23 @@ function init() {
     var sphere = new THREE.Mesh( sphereGeom, blueMaterial );
     object.add(sphere);
     
-    
-    
     scene.add(object);
 
 
 
-    document.body.appendChild( renderer.domElement );
+    
+    offset.set(0, 0, 0);
+    scale.set(1, 1);
+
+
+
 
     document.addEventListener( 'mousedown', onDocumentMouseDown, false);
+    document.addEventListener( 'mouseup', onDocumentMouseUp, false);
     document.addEventListener( 'mousemove', onDocumentMouseMove, false );
     window.addEventListener( 'resize', onWindowResize, false );
+
+    document.body.appendChild( renderer.domElement );
 }
 
 
@@ -77,7 +93,7 @@ function experimentalBall(mouseEvent, offset, scale) {
     windowCoord.y += mouseEvent.y;
 
     windowCoord.x = (windowCoord.x * 2 / windowMinSize);
-    windowCoord.y = (windowCoord.y * 2 / windowMinSize);
+    windowCoord.y = - (windowCoord.y * 2 / windowMinSize);
     
     P.set(
         (windowCoord.x - offset.x) / scale.x,
@@ -96,22 +112,41 @@ function experimentalBall(mouseEvent, offset, scale) {
 }
 
 function onDocumentMouseDown(event) {
-    event.preventDefault();
-
     isClicking = true;
-
-    var mouseEvent = new THREE.Vector2();
-    mouseEvent.set( event.clientX, event.clientY);
-
-    var offset = new THREE.Vector3();
-    offset.set(0, 0, 0);
-
-    var scale = new THREE.Vector2();
-    scale.set(1, 1);
-
-    //experimentalBall(mouseEvent, offset, scale);
-    console.log(experimentalBall(mouseEvent, offset, scale));
+    
+    //console.log(experimentalBall(mouseEvent, offset, scale));
 }
+
+function onDocumentMouseUp(event) {
+    isClicking = false;
+}
+
+
+function onDocumentMouseMove( event ) {
+
+    curMouse.x = event.clientX;
+    curMouse.y = event.clientY;
+    
+    if (isClicking) {
+       
+
+        va = experimentalBall(lastMouse, offset, scale);
+        vb = experimentalBall(curMouse, offset, scale);
+
+        var angle = Math.acos(Math.min(1, va.dot(vb) / va.length() /vb.length()));
+        var axis = va.cross(vb).normalize();
+
+        quaternion.setFromAxisAngle(axis, angle);
+        object.quaternion.multiplyQuaternions(quaternion, object.quaternion);
+
+        
+    }
+
+
+    lastMouse.x = curMouse.x;
+    lastMouse.y = curMouse.y;
+}
+
 
 function onWindowResize() {
 
@@ -125,11 +160,6 @@ function onWindowResize() {
     renderer.setSize( window.innerWidth, window.innerHeight );
 }
 
-function onDocumentMouseMove( event ) {
-    event.preventDefault();
-    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-    mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-}
 
 function animate() {
     requestAnimationFrame( animate );
