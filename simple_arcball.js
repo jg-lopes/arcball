@@ -23,17 +23,24 @@ for ( var i = 0; i < geometry.faces.length; i += 2 ) {
 var color = new THREE.Color( 'lightblue' );
 renderer.setClearColor( color );
 
+var myObjects = new THREE.Object3D();
+
 var material = new THREE.MeshBasicMaterial( { color: 0xffffff, vertexColors: THREE.FaceColors } );
 var cube = new THREE.Mesh( geometry, material );
-scene.add( cube );
+// scene.add( cube );
 
 var sphereGeom =  new THREE.SphereGeometry(1, 100, 100);
 var blueMaterial = new THREE.MeshBasicMaterial( { color: 0xee00ee, transparent: true, opacity: 0.3 } );
 var sphere = new THREE.Mesh( sphereGeom, blueMaterial );
-scene.add(sphere);
+// scene.add(sphere);
+
+myObjects.add(cube, sphere);
+scene.add(myObjects);
+
+myObjects.scale.set(0.5, 0.5, 0.5);
 
 var offset = new THREE.Vector3(0.25, 0.25, 0);
-
+var scale = new THREE.Vector3(0.5, 0.5, 0);
 scene.translateX(0.25);
 scene.translateY(0.25);
 scene.translateZ(0.25);
@@ -83,15 +90,15 @@ function getArcballVector(vector2) {
 
 var raycaster = new THREE.Raycaster();
 
-function experimentalBall(vector2, offset) {
+function experimentalBall(vector2, offset, scale) {
     P = new THREE.Vector3();
 
     windowCoordX = ( vector2.x / window.innerWidth ) * 2 - 1
     windowCoordY = - ( vector2.y / window.innerHeight ) * 2 + 1
 
     P.set(
-        windowCoordX - offset.x,
-        windowCoordY - offset.y,
+        (windowCoordX - offset.x) / scale.x,
+        (windowCoordY - offset.y) / scale.y,
         0 ); 
     
     raycaster.setFromCamera({windowCoordX, windowCoordY}, camera);
@@ -131,8 +138,8 @@ function onDocumentMouseMove(event) {
     if (arcball_on) {
        
 
-        va = experimentalBall(last, offset);
-        vb = experimentalBall(cur, offset);
+        va = experimentalBall(last, offset, scale);
+        vb = experimentalBall(cur, offset, scale);
 
         var angle = Math.acos(Math.min(1, va.dot(vb) / va.length() /vb.length()));
         var axis = va.cross(vb).normalize();
