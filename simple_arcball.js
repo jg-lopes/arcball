@@ -1,4 +1,6 @@
 var scene = new THREE.Scene();
+
+var mouseVector = new THREE.Vector2();
 var screenSize = Math.min(window.innerWidth, window.innerHeight);
 //var camera = new THREE.OrthographicCamera( window.innerWidth / - screenSize, window.innerWidth / screenSize, window.innerHeight / screenSize, window.innerHeight / -screenSize, - 500, 1000); 
 var camera = new THREE.OrthographicCamera( -1, 1, 1, -1, - 500, 1000); 
@@ -7,6 +9,8 @@ renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
 var geometry = new THREE.BoxGeometry( 1, 1, 1 );
+
+var raycaster = new THREE.Raycaster();
 
 // Colors of the face of the cube (following a Rubik's Cube model)
 // Blue - FRONT // Green - BACK
@@ -27,29 +31,29 @@ var myObjects = new THREE.Object3D();
 
 var material = new THREE.MeshBasicMaterial( { color: 0xffffff, vertexColors: THREE.FaceColors } );
 var cube = new THREE.Mesh( geometry, material );
-// scene.add( cube );
+scene.add( cube );
 
 var sphereGeom =  new THREE.SphereGeometry(1, 100, 100);
 var blueMaterial = new THREE.MeshBasicMaterial( { color: 0xee00ee, transparent: true, opacity: 0.3 } );
 var sphere = new THREE.Mesh( sphereGeom, blueMaterial );
-// scene.add(sphere);
+scene.add(sphere);
 
-myObjects.add(cube, sphere);
-scene.add(myObjects);
+// myObjects.add(cube, sphere);
+// scene.add(myObjects);
 
 myObjects.scale.set(0.5, 0.5, 0.5);
 
-var offset = new THREE.Vector3(0.25, 0.25, 0);
+var offset = new THREE.Vector3(0.25, 0.25, 1);
 var scale = new THREE.Vector3(0.5, 0.5, 0);
 scene.translateX(0.25);
 scene.translateY(0.25);
-scene.translateZ(0.25);
+scene.translateZ(1);
 
 
 
 // ARCBALL INTERACTION
 
-var mouse = new THREE.Vector2();
+var mouse = new THREE.Vector2(), INTERSECTED;
 var last = new THREE.Vector2();
 var cur = new THREE.Vector2();
 var arcball_on = false;
@@ -59,12 +63,12 @@ var angle;
 var axis = new THREE.Vector3();
 var quaternion = new THREE.Quaternion();
 
+animate();
+
 document.addEventListener('mousedown', onDocumentMouseDown);
-document.addEventListener('mousemove', onDocumentMouseMove);
+document.addEventListener('mousemove', onDocumentMouseMove, false);
 document.addEventListener('mouseup', onDocumentMouseUp);
 
-
-animate();
 
 
 function getArcballVector(vector2) {
@@ -88,8 +92,6 @@ function getArcballVector(vector2) {
     return P;
 }
 
-var raycaster = new THREE.Raycaster();
-
 function experimentalBall(vector2, offset, scale) {
     P = new THREE.Vector3();
 
@@ -101,10 +103,6 @@ function experimentalBall(vector2, offset, scale) {
         (windowCoordY - offset.y) / scale.y,
         0 ); 
     
-    raycaster.setFromCamera({windowCoordX, windowCoordY}, camera);
-    
-    // var intersects = raycaster.intersectObject(sphere); //array
-    // //intersects.object.material.color.set(0xff0000);
 
     // console.log((vector2.x / 1000) - 0.5 * (window.innerWidth / 1000) );
 
@@ -118,11 +116,10 @@ function experimentalBall(vector2, offset, scale) {
 
     return P;
 }
-
-
-
 function onDocumentMouseDown(event) {
+
     
+
     arcball_on = true;  
 }
 
@@ -131,6 +128,10 @@ function onDocumentMouseUp(event) {
 }
 
 function onDocumentMouseMove(event) {
+    event.preventDefault();
+    mouseVector.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+	mouseVector.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
 
     cur.x = event.clientX;
     cur.y = event.clientY;
@@ -156,16 +157,21 @@ function onDocumentMouseMove(event) {
 
 
 }
-
-function onWindowResize()
-	{
-		camera.aspect = window.innerWidth / window.innerHeight;
-		camera.updateProjectionMatrix();
-		renderer.setSize(window.innerWidth, window.innerHeight);
-	}
-
-
+camera.translateZ(20);
 function animate() {
     requestAnimationFrame( animate );
+    // update the picking ray with the camera and mouse position
+    
+    raycaster.setFromCamera(mouseVector, camera);
+
+    var intersects = raycaster.intersectObject(sphere);
+    console.log(intersects);
+
+    // for ( var i = 0; i < intersects.length; i++ ) {
+
+	// 	intersects[ i ].object.material.color.set( 0xff0000 );
+
+	// }
+
     renderer.render( scene, camera );
 };
