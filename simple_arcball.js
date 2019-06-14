@@ -37,18 +37,11 @@ var angle;
 var axis = new THREE.Vector3();
 var quaternion = new THREE.Quaternion();
 
-var prevQuaternion = new THREE.Quaternion(); 
-
 document.addEventListener('mousedown', onDocumentMouseDown);
 document.addEventListener('mousemove', onDocumentMouseMove);
 document.addEventListener('mouseup', onDocumentMouseUp);
 
 animate();
-
-
-function toRadians(angle) {
-	return angle * (Math.PI / 180);
-}
 
 
 function getArcballVector(vector2) {
@@ -80,8 +73,6 @@ function onDocumentMouseDown(event) {
 
 function onDocumentMouseUp(event) {
     arcball_on = false;
-
-    prevQuaternion = quaternion;
 }
 
 function onDocumentMouseMove(event) {
