@@ -53,7 +53,7 @@ function init() {
         geometry.faces[ i + 1 ].color.set( color);
     }
     var material = new THREE.MeshBasicMaterial( { color: 0xffffff, vertexColors: THREE.FaceColors } );
-    box = new THREE.Mesh( geometry, material );
+    var box = new THREE.Mesh( geometry, material );
 
     box.scale.set(0.5, 0.5, 0.5);
     box.translateX(-0.5);
@@ -150,13 +150,15 @@ function onDocumentMouseDown(event) {
 
 }
 
-function onDocumentDoubleClick(event) {
+function onDocumentDoubleClick(event) {;
+    scene.remove(scene.getObjectByName('arcball'));
     raycaster.setFromCamera(mouseVector, camera);
 
-    var intersects = raycaster.intersectObjects(scene.children, true);
-    scene.remove(scene.getObjectByName('arcball'));
-
+    var intersects = raycaster.intersectObjects(scene.children, true)
+    console.log(intersects);
     if (! isEmpty(intersects)) {
+
+        currentClicked = intersects[0].object;
         
 
         var sphereGeom = new THREE.SphereGeometry(1, 100, 100);
@@ -172,6 +174,8 @@ function onDocumentDoubleClick(event) {
         scene.add(activeArcball);
         
     } else {
+        currentClicked = interactiveBoxes;
+
         var sphereGeom = new THREE.SphereGeometry(1, 100, 100);
         var blueMaterial = new THREE.MeshBasicMaterial( { color: 0x000000, transparent: true, opacity: 0.3 } );
         activeArcball = new THREE.Mesh( sphereGeom, blueMaterial );
@@ -248,7 +252,14 @@ function onDocumentMouseMove( event ) {
             var axis = va.cross(vb).normalize();
 
             quaternion.setFromAxisAngle(axis, angle);
-            box.quaternion.multiplyQuaternions(quaternion, box.quaternion);
+            if (currentClicked != interactiveBoxes) {
+                currentClicked.quaternion.multiplyQuaternions(quaternion, currentClicked.quaternion);
+            }else {
+                var boxList = interactiveBoxes.children;
+                for (i = 0; i < boxList.length; i++) {
+                    boxList[i].quaternion.multiplyQuaternions(quaternion, boxList[i].quaternion);
+                }
+            }
         }
 
         lastIntersection.x = curIntersection.x;
