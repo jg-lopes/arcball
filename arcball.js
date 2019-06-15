@@ -14,7 +14,8 @@ var interactiveBoxes;
 var currentClicked;
 var activeArcball;
 
-var box;
+var mode = "ROTATE";
+
 
 
 init();
@@ -106,29 +107,11 @@ function init() {
     document.addEventListener( 'mousemove', onDocumentMouseMove, false );
     window.addEventListener( 'resize', onWindowResize, false );
     document.addEventListener( 'mousewheel', onDocumentMouseWheel, false);
+    document.addEventListener( 'dblclick', onDocumentDoubleClick, false);
 
 
 
     document.body.appendChild( renderer.domElement );
-}
-
-
-function getArcballVector(mouseEvent) {
-    P = new THREE.Vector3();
-    windowCoord = new THREE.Vector2();
-    P.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-    P.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-    P.z = 0; 
-
-    OP_length = P.length();
-
-    if (OP_length <= 1 ){
-        P.z = Math.sqrt(1 - OP_length * OP_length);
-    } else {
-        P = P.normalize();
-    }
-
-    return P;
 }
 
 function experimentalBall(uv) {
@@ -162,9 +145,16 @@ function onDocumentMouseDown(event) {
     // }
 
 
+
+    //console.log(intersects);
+
+}
+
+function onDocumentDoubleClick(event) {
     raycaster.setFromCamera(mouseVector, camera);
 
     var intersects = raycaster.intersectObjects(scene.children, true);
+    scene.remove(scene.getObjectByName('arcball'));
 
     if (! isEmpty(intersects)) {
         
@@ -179,15 +169,55 @@ function onDocumentMouseDown(event) {
         activeArcball.scale.set(objScale.x, objScale.y, objScale.z);
         activeArcball.position.set(objPosition.x, objPosition.y, objPosition.z);
 
-        scene.remove(scene.getObjectByName('arcball'));
         scene.add(activeArcball);
         
     } else {
-        scene.remove(scene.getObjectByName('arcball'));
+        var sphereGeom = new THREE.SphereGeometry(1, 100, 100);
+        var blueMaterial = new THREE.MeshBasicMaterial( { color: 0x000000, transparent: true, opacity: 0.3 } );
+        activeArcball = new THREE.Mesh( sphereGeom, blueMaterial );
+        
+        activeArcball.name = 'arcball';
+        
+        var boxList = interactiveBoxes.children;
+
+        var positionArcball = new THREE.Vector2(0, 0);
+        
+        // Finds the centroid of all the existing cubes
+        for (i = 0; i < boxList.length; i++) {
+            positionArcball.x += boxList[i].position.x;
+            positionArcball.y += boxList[i].position.y;
+        }
+
+        positionArcball.divideScalar(boxList.length);
+
+
+
+        var maxDist = 0;
+        var maxBox, distance;
+        // Finds the distance to the furthest cube from centroid
+        for (i = 0; i < boxList.length; i++) {
+            
+            px = boxList[i].position.x - positionArcball.x;
+            py = boxList[i].position.y - positionArcball.y;
+
+            distance = px * px + py * py;
+
+            if (distance > maxDist) { 
+                maxDist = distance;
+            }
+        }
+
+        // Square roots it to find correct maxDist
+        // Multiplies by 3 since the distances are calculated to the centroid of the boxes
+        // Needs to fill the entire box + some extra space 
+        maxDist = Math.sqrt(maxDist) * 3;
+
+
+        activeArcball.position.set(positionArcball.x, positionArcball.y, 1);
+        activeArcball.scale.set(maxDist, maxDist, maxDist);
+        scene.add(activeArcball);
+
     }
-
-    //console.log(intersects);
-
 }
 
 function onDocumentMouseUp(event) {
@@ -239,7 +269,6 @@ function onWindowResize() {
     renderer.setSize( window.innerWidth, window.innerHeight );
 }
 
-zoomDirection = new THREE.Vector3();
 function onDocumentMouseWheel(event) {
 
     if (event.deltaY < 0) { 
