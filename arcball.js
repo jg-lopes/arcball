@@ -135,27 +135,13 @@ function experimentalBall(uv) {
 
 function onDocumentMouseDown(event) {
     isClicking = true;
-
-    // for (var i = 0; i < interactiveBoxes.children.length; i++) {
-    //     var box = interactiveBoxes.children[i];
-    //     if (! isEmpty (box.children)) {
-    //         scene.remove(box.children[0]);
-    //     }
-    //     console.log(interactiveBoxes.children[i]);
-    // }
-
-
-
-    //console.log(intersects);
-
 }
 
 function onDocumentDoubleClick(event) {;
     scene.remove(scene.getObjectByName('arcball'));
     raycaster.setFromCamera(mouseVector, camera);
 
-    var intersects = raycaster.intersectObjects(scene.children, true)
-    console.log(intersects);
+    var intersects = raycaster.intersectObjects(scene.children, true);
     if (! isEmpty(intersects)) {
 
         currentClicked = intersects[0].object;
@@ -217,7 +203,7 @@ function onDocumentDoubleClick(event) {;
         maxDist = Math.sqrt(maxDist) * 3;
 
 
-        activeArcball.position.set(positionArcball.x, positionArcball.y, 1);
+        activeArcball.position.set(positionArcball.x, positionArcball.y, -3);
         activeArcball.scale.set(maxDist, maxDist, maxDist);
         scene.add(activeArcball);
 
@@ -282,8 +268,10 @@ function onWindowResize() {
 
 function onDocumentMouseWheel(event) {
 
+
     if (event.deltaY < 0) { 
-        camera.zoom -= 0.1
+        if (camera.zoom > 0.2)
+            camera.zoom -= 0.1;
     };
     
     if (event.deltaY > 0) { 
