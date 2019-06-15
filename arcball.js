@@ -105,6 +105,7 @@ function init() {
     document.addEventListener( 'mouseup', onDocumentMouseUp, false);
     document.addEventListener( 'mousemove', onDocumentMouseMove, false );
     window.addEventListener( 'resize', onWindowResize, false );
+    document.addEventListener( 'mousewheel', onDocumentMouseWheel, false);
 
 
 
@@ -238,12 +239,22 @@ function onWindowResize() {
     renderer.setSize( window.innerWidth, window.innerHeight );
 }
 
+zoomDirection = new THREE.Vector3();
+function onDocumentMouseWheel(event) {
+
+    if (event.deltaY < 0) { 
+        camera.zoom -= 0.1
+    };
+    
+    if (event.deltaY > 0) { 
+        camera.zoom += 0.1 
+    };
+    camera.updateProjectionMatrix();
+
+}
 
 function animate() {
     requestAnimationFrame( animate );
-
-    
-
     renderer.render( scene, camera );
 }
 
