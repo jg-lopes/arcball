@@ -5,14 +5,16 @@ var isClicking;
 var frustumSize = 2;
 
 var mouseVector = new THREE.Vector3();
-var lastMouse = new THREE.Vector2();
-var curMouse = new THREE.Vector2();
 var quaternion = new THREE.Quaternion();
+var curIntersection = new THREE.Vector2();
+var lastIntersection = new THREE.Vector2();
 
 var interactiveBoxes;
 
 var currentClicked;
 var activeArcball;
+
+var box;
 
 
 init();
@@ -50,7 +52,7 @@ function init() {
         geometry.faces[ i + 1 ].color.set( color);
     }
     var material = new THREE.MeshBasicMaterial( { color: 0xffffff, vertexColors: THREE.FaceColors } );
-    var box = new THREE.Mesh( geometry, material );
+    box = new THREE.Mesh( geometry, material );
 
     box.scale.set(0.5, 0.5, 0.5);
     box.translateX(-0.5);
@@ -103,7 +105,6 @@ function init() {
     document.addEventListener( 'mouseup', onDocumentMouseUp, false);
     document.addEventListener( 'mousemove', onDocumentMouseMove, false );
     window.addEventListener( 'resize', onWindowResize, false );
-    document.addEventListener( 'mousewheel', onDocumentMouseWheel, false );
 
 
 
@@ -111,29 +112,30 @@ function init() {
 }
 
 
-function getArcballVector(mouseEvent, object) {
+function getArcballVector(mouseEvent) {
     P = new THREE.Vector3();
     windowCoord = new THREE.Vector2();
+    P.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+    P.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+    P.z = 0; 
 
-    offset = object.position;
-    scale = object.scale;
+    OP_length = P.length();
 
-    // Adjusting the mouse coordinates to the window coordinates
-    // Respecting the aspect size of the screen
-    windowMinSize = Math.min(window.innerWidth, window.innerHeight);
+    if (OP_length <= 1 ){
+        P.z = Math.sqrt(1 - OP_length * OP_length);
+    } else {
+        P = P.normalize();
+    }
 
-    windowCoord.x = - window.innerWidth / 2;
-    windowCoord.y = - window.innerHeight / 2; 
+    return P;
+}
 
-    windowCoord.x += mouseEvent.x;
-    windowCoord.y += mouseEvent.y;
+function experimentalBall(uv) {
+    P = new THREE.Vector3;
 
-    windowCoord.x = (windowCoord.x * 2 / windowMinSize);
-    windowCoord.y = - (windowCoord.y * 2 / windowMinSize);
-    
     P.set(
-        (windowCoord.x - offset.x) / scale.x,
-        (windowCoord.y - offset.y) / scale.y,
+        uv.x,
+        uv.y,
         0 ); 
 
     OP_length = P.length();
@@ -196,35 +198,31 @@ function onDocumentMouseMove( event ) {
     mouseVector.x = ( event.clientX / window.innerWidth ) * 2 - 1;
     mouseVector.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
     
-    curMouse.x = event.clientX;
-    curMouse.y = event.clientY;
-    
-    if (isClicking) {
-       
 
-        raycaster.setFromCamera(mouseVector, camera);
-
-        //var intersects = raycaster.intersectObject(activeArcball);
-        //console.log(intersects);
-        va = getArcballVector(lastMouse, currentClicked);
-        vb = getArcballVector(curMouse, currentClicked);
-
-        var angle = Math.acos(Math.min(1, va.dot(vb) / va.length() / vb.length()));
-        var axis = va.cross(vb).normalize();
-
-        quaternion.setFromAxisAngle(axis, angle);
-        currentClicked.quaternion.multiplyQuaternions(quaternion, currentClicked.quaternion);
-
-        
+   
+    raycaster.setFromCamera(mouseVector, camera);
+    if (activeArcball != undefined) {
+        var intersects = raycaster.intersectObject(activeArcball);
     }
 
+    if (! isEmpty(intersects)){  
+        curIntersection.x = intersects[0].point.x
+        curIntersection.y = intersects[0].point.y;
 
-    lastMouse.x = curMouse.x;
-    lastMouse.y = curMouse.y;
-}
+        if (isClicking) {
+            va = experimentalBall(lastIntersection);
+            vb = experimentalBall(curIntersection);
 
-function onDocumentMouseWheel( event ) {
-    camera.zoom += event.wheelDeltaY * 0.05;
+            var angle = Math.acos(Math.min(1, va.dot(vb) / va.length() / vb.length()));
+            var axis = va.cross(vb).normalize();
+
+            quaternion.setFromAxisAngle(axis, angle);
+            box.quaternion.multiplyQuaternions(quaternion, box.quaternion);
+        }
+
+        lastIntersection.x = curIntersection.x;
+        lastIntersection.y = curIntersection.y;
+    } 
 }
 
 
