@@ -135,6 +135,10 @@ function experimentalBall(uv) {
 
 function onDocumentMouseDown(event) {
     isClicking = true;
+
+    
+    //console.log(pos);
+    console.log(vec);
 }
 
 function onDocumentDoubleClick(event) {;
@@ -214,14 +218,16 @@ function onDocumentMouseUp(event) {
     isClicking = false;
 }
 
+var lastInputInside = 1;
+var mouseUnproj = new THREE.Vector3();
+var centerUnproj = new THREE.Vector3();
 function onDocumentMouseMove( event ) {
 
     mouseVector.x = ( event.clientX / window.innerWidth ) * 2 - 1;
     mouseVector.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
     
-
-   
     raycaster.setFromCamera(mouseVector, camera);
+
     if (activeArcball != undefined) {
         var intersects = raycaster.intersectObject(activeArcball);
     }
@@ -236,21 +242,74 @@ function onDocumentMouseMove( event ) {
 
             var angle = Math.acos(Math.min(1, va.dot(vb) / va.length() / vb.length()));
             var axis = va.cross(vb).normalize();
-
-            quaternion.setFromAxisAngle(axis, angle);
-            if (currentClicked != interactiveBoxes) {
-                currentClicked.quaternion.multiplyQuaternions(quaternion, currentClicked.quaternion);
-            }else {
-                var boxList = interactiveBoxes.children;
-                for (i = 0; i < boxList.length; i++) {
-                    boxList[i].quaternion.multiplyQuaternions(quaternion, boxList[i].quaternion);
+            
+            // Removes extreme rotations (due to unset last vectors or change between inside/outside, not user input)
+            if (lastInputInside == 1) {
+                quaternion.setFromAxisAngle(axis, angle);
+                if (currentClicked != interactiveBoxes) {
+                    currentClicked.quaternion.multiplyQuaternions(quaternion, currentClicked.quaternion);
+                } else {
+                    var boxList = interactiveBoxes.children;
+                    for (i = 0; i < boxList.length; i++) {
+                        boxList[i].quaternion.multiplyQuaternions(quaternion, boxList[i].quaternion);
+                    }
                 }
             }
+            var string = "IN";
+            console.log({string, axis, angle});
         }
 
         lastIntersection.x = curIntersection.x;
         lastIntersection.y = curIntersection.y;
-    } 
+
+        lastInputInside = 1;
+
+    } else {
+        mouseUnproj.set(
+            ( event.clientX / window.innerWidth ) * 2 - 1,
+            - ( event.clientY / window.innerHeight ) * 2 + 1,
+            0 );
+        
+        mouseUnproj.unproject( camera );
+    
+        var centerUnproj = currentClicked.position.clone();
+        centerUnproj.unproject (camera);
+        
+        mouseUnproj.z = 0;
+        centerUnproj.z = 0;
+        mouseUnproj.sub(centerUnproj).normalize();
+
+        curIntersection.x = mouseUnproj.x
+        curIntersection.y = mouseUnproj.y;
+
+        if (isClicking) {
+            va = experimentalBall(lastIntersection);
+            vb = experimentalBall(curIntersection);
+
+            var angle = Math.acos(Math.min(1, va.dot(vb) / va.length() / vb.length()));
+            var axis = va.cross(vb).normalize();
+            
+            // Removes extreme rotations (due to unset last vectors or change between inside/outside, not user input)
+            if (lastInputInside == 0) {
+                quaternion.setFromAxisAngle(axis, angle);
+                if (currentClicked != interactiveBoxes) {
+                    currentClicked.quaternion.multiplyQuaternions(quaternion, currentClicked.quaternion);
+                }else {
+                    var boxList = interactiveBoxes.children;
+                    for (i = 0; i < boxList.length; i++) {
+                        boxList[i].quaternion.multiplyQuaternions(quaternion, boxList[i].quaternion);
+                    }
+                }
+            }
+            var string = "OUT";
+            console.log({string, axis, angle});
+        }
+
+        lastIntersection.x = curIntersection.x;
+        lastIntersection.y = curIntersection.y;
+
+        lastInputInside = 0;
+    }
 }
 
 
