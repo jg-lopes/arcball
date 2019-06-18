@@ -147,6 +147,7 @@ function onDocumentMouseDown(event) {
     console.log(vec);
 }
 
+objPosition = new THREE.Vector3();
 function onDocumentDoubleClick(event) {;
     scene.remove(scene.getObjectByName('arcball'));
     raycaster.setFromCamera(mouseVector, camera);
@@ -164,6 +165,8 @@ function onDocumentDoubleClick(event) {;
         activeArcball.name = 'arcball';
         objScale = intersects[0].object.scale;
 
+        scene.updateMatrixWorld();
+        objPosition.setFromMatrixPosition (intersects[0].object.matrixWorld);
         activeArcball.scale.set(objScale.x, objScale.y, objScale.z);
         activeArcball.position.set(objPosition.x, objPosition.y, objPosition.z);
 
