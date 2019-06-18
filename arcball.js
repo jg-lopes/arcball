@@ -58,7 +58,7 @@ function init() {
     box.scale.set(0.5, 0.5, 0.5);
     box.translateX(-0.5);
     box.translateY(-0.5);
-    box.translateZ(-10);
+    box.translateZ(-0.7);
 
     box.rotateX(Math.PI/5);
     box.rotateY(Math.PI/5);
@@ -81,7 +81,7 @@ function init() {
     box2.scale.set(0.75, 0.75, 0.75);
     box2.translateX(0.3);
     box2.translateY(-0.2);
-    box2.translateZ(-5);
+    box2.translateZ(-0.4);
 
 
     box2.rotateY(Math.PI/5);
@@ -91,6 +91,9 @@ function init() {
 
     scene.add( interactiveBoxes );
 
+    // var axesHelper = new THREE.AxesHelper( 1 );
+    // scene.add( axesHelper );
+
     // // Sphere
     // var sphereGeom = new THREE.SphereGeometry(1, 100, 100);
     // var blueMaterial = new THREE.MeshBasicMaterial( { color: 0x000000, transparent: true, opacity: 0.3 } );
@@ -98,6 +101,9 @@ function init() {
     // interactiveBox.add(sphere);
     
     // scene.add(interactiveBox);
+
+    camera.zoom = 0.1;
+    camera.updateProjectionMatrix();
 
 
 
@@ -157,7 +163,7 @@ function onDocumentDoubleClick(event) {;
         
         activeArcball.name = 'arcball';
         objScale = intersects[0].object.scale;
-        objPosition = intersects[0].object.position;
+
         activeArcball.scale.set(objScale.x, objScale.y, objScale.z);
         activeArcball.position.set(objPosition.x, objPosition.y, objPosition.z);
 
@@ -174,12 +180,13 @@ function onDocumentDoubleClick(event) {;
         
         var boxList = interactiveBoxes.children;
 
-        var positionArcball = new THREE.Vector2(0, 0);
+        var positionArcball = new THREE.Vector3(0, 0, 0);
         
         // Finds the centroid of all the existing cubes
         for (i = 0; i < boxList.length; i++) {
             positionArcball.x += boxList[i].position.x;
             positionArcball.y += boxList[i].position.y;
+            positionArcball.z += boxList[i].position.z;
         }
 
         positionArcball.divideScalar(boxList.length);
@@ -193,8 +200,9 @@ function onDocumentDoubleClick(event) {;
             
             px = boxList[i].position.x - positionArcball.x;
             py = boxList[i].position.y - positionArcball.y;
+            pz = boxList[i].position.z - positionArcball.z;
 
-            distance = px * px + py * py;
+            distance = px * px + py * py + pz * pz;
 
             if (distance > maxDist) { 
                 maxDist = distance;
@@ -202,12 +210,12 @@ function onDocumentDoubleClick(event) {;
         }
 
         // Square roots it to find correct maxDist
-        // Multiplies by 3 since the distances are calculated to the centroid of the boxes
+        // Multiplies by 5 since the distances are calculated to the centroid of the boxes
         // Needs to fill the entire box + some extra space 
-        maxDist = Math.sqrt(maxDist) * 3;
+        maxDist = Math.sqrt(maxDist) * 5;
 
 
-        activeArcball.position.set(positionArcball.x, positionArcball.y, -3);
+        activeArcball.position.set(positionArcball.x, positionArcball.y, positionArcball.z);
         activeArcball.scale.set(maxDist, maxDist, maxDist);
         scene.add(activeArcball);
 
@@ -249,10 +257,7 @@ function onDocumentMouseMove( event ) {
                 if (currentClicked != interactiveBoxes) {
                     currentClicked.quaternion.multiplyQuaternions(quaternion, currentClicked.quaternion);
                 } else {
-                    var boxList = interactiveBoxes.children;
-                    for (i = 0; i < boxList.length; i++) {
-                        boxList[i].quaternion.multiplyQuaternions(quaternion, boxList[i].quaternion);
-                    }
+                    interactiveBoxes.quaternion.multiplyQuaternions(quaternion, interactiveBoxes.quaternion);
                 }
             }
             var string = "IN";
@@ -295,10 +300,7 @@ function onDocumentMouseMove( event ) {
                 if (currentClicked != interactiveBoxes) {
                     currentClicked.quaternion.multiplyQuaternions(quaternion, currentClicked.quaternion);
                 }else {
-                    var boxList = interactiveBoxes.children;
-                    for (i = 0; i < boxList.length; i++) {
-                        boxList[i].quaternion.multiplyQuaternions(quaternion, boxList[i].quaternion);
-                    }
+                    interactiveBoxes.quaternion.multiplyQuaternions(quaternion, interactiveBoxes.quaternion);
                 }
             }
             var string = "OUT";
@@ -334,7 +336,7 @@ function onDocumentMouseWheel(event) {
     };
     
     if (event.deltaY > 0) { 
-        camera.zoom += 0.1 
+        camera.zoom += 0.1;
     };
     camera.updateProjectionMatrix();
 
@@ -342,6 +344,9 @@ function onDocumentMouseWheel(event) {
 
 function animate() {
     requestAnimationFrame( animate );
+
+    // interactiveBoxes.rotation.x += 0.05;
+    // interactiveBoxes.rotation.y += 0.05;
     renderer.render( scene, camera );
 }
 
