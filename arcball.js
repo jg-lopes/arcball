@@ -167,6 +167,7 @@ function onDocumentDoubleClick(event) {;
 
         scene.updateMatrixWorld();
         objPosition.setFromMatrixPosition (intersects[0].object.matrixWorld);
+
         activeArcball.scale.set(objScale.x, objScale.y, objScale.z);
         activeArcball.position.set(objPosition.x, objPosition.y, objPosition.z);
 
@@ -256,6 +257,8 @@ function onDocumentMouseMove( event ) {
             
             // Removes extreme rotations (due to unset last vectors or change between inside/outside, not user input)
             if (lastInputInside == 1) {
+                temp = interactiveBoxes.quaternion.clone();
+                axis.applyQuaternion(temp.conjugate());
                 quaternion.setFromAxisAngle(axis, angle);
                 if (currentClicked != interactiveBoxes) {
                     currentClicked.quaternion.multiplyQuaternions(quaternion, currentClicked.quaternion);
