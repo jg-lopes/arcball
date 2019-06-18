@@ -14,7 +14,7 @@ var interactiveBoxes;
 var currentClicked;
 var activeArcball;
 
-var mode = "ROTATE";
+var mode = "ROTATION";
 
 
 
@@ -238,85 +238,90 @@ function onDocumentMouseMove( event ) {
     mouseVector.x = ( event.clientX / window.innerWidth ) * 2 - 1;
     mouseVector.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
     
-    raycaster.setFromCamera(mouseVector, camera);
 
-    if (activeArcball != undefined) {
-        var intersects = raycaster.intersectObject(activeArcball);
-    }
+    if (mode == "ROTATION"){ 
 
-    if (! isEmpty(intersects)){  
-        curIntersection.x = intersects[0].point.x
-        curIntersection.y = intersects[0].point.y;
-
-        if (isClicking) {
-            va = experimentalBall(lastIntersection);
-            vb = experimentalBall(curIntersection);
-
-            var angle = Math.acos(Math.min(1, va.dot(vb) / va.length() / vb.length()));
-            var axis = va.cross(vb).normalize();
-            
-            // Removes extreme rotations (due to unset last vectors or change between inside/outside, not user input)
-            if (lastInputInside == 1) {
-                temp = interactiveBoxes.quaternion.clone();
-                axis.applyQuaternion(temp.conjugate());
-                quaternion.setFromAxisAngle(axis, angle);
-                if (currentClicked != interactiveBoxes) {
-                    currentClicked.quaternion.multiplyQuaternions(quaternion, currentClicked.quaternion);
-                } else {
-                    interactiveBoxes.quaternion.multiplyQuaternions(quaternion, interactiveBoxes.quaternion);
-                }
-            }
-            var string = "IN";
-            console.log({string, axis, angle});
+        if (activeArcball != undefined) {
+            var intersects = raycaster.intersectObject(activeArcball);
         }
 
-        lastIntersection.x = curIntersection.x;
-        lastIntersection.y = curIntersection.y;
+        if (! isEmpty(intersects)){  
+            curIntersection.x = intersects[0].point.x
+            curIntersection.y = intersects[0].point.y;
 
-        lastInputInside = 1;
+            if (isClicking) {
+                va = experimentalBall(lastIntersection);
+                vb = experimentalBall(curIntersection);
 
-    } else {
-        mouseUnproj.set(
-            ( event.clientX / window.innerWidth ) * 2 - 1,
-            - ( event.clientY / window.innerHeight ) * 2 + 1,
-            0 );
-        
-        mouseUnproj.unproject( camera );
-    
-        var centerUnproj = currentClicked.position.clone();
-        centerUnproj.unproject (camera);
-        
-        mouseUnproj.z = 0;
-        centerUnproj.z = 0;
-        mouseUnproj.sub(centerUnproj).normalize();
-
-        curIntersection.x = mouseUnproj.x
-        curIntersection.y = mouseUnproj.y;
-
-        if (isClicking) {
-            va = experimentalBall(lastIntersection);
-            vb = experimentalBall(curIntersection);
-
-            var angle = Math.acos(Math.min(1, va.dot(vb) / va.length() / vb.length()));
-            var axis = va.cross(vb).normalize();
-            
-            // Removes extreme rotations (due to unset last vectors or change between inside/outside, not user input)
-            if (lastInputInside == 0) {
-                quaternion.setFromAxisAngle(axis, angle);
-                if (currentClicked != interactiveBoxes) {
-                    currentClicked.quaternion.multiplyQuaternions(quaternion, currentClicked.quaternion);
-                }else {
-                    interactiveBoxes.quaternion.multiplyQuaternions(quaternion, interactiveBoxes.quaternion);
+                var angle = Math.acos(Math.min(1, va.dot(vb) / va.length() / vb.length()));
+                var axis = va.cross(vb).normalize();
+                
+                // Removes extreme rotations (due to unset last vectors or change between inside/outside, not user input)
+                if (lastInputInside == 1) {
+                    temp = interactiveBoxes.quaternion.clone();
+                    axis.applyQuaternion(temp.conjugate());
+                    quaternion.setFromAxisAngle(axis, angle);
+                    if (currentClicked != interactiveBoxes) {
+                        currentClicked.quaternion.multiplyQuaternions(quaternion, currentClicked.quaternion);
+                    } else {
+                        interactiveBoxes.quaternion.multiplyQuaternions(quaternion, interactiveBoxes.quaternion);
+                    }
                 }
+                var string = "IN";
+                console.log({string, axis, angle});
             }
-            var string = "OUT";
-            console.log({string, axis, angle});
+
+            lastIntersection.x = curIntersection.x;
+            lastIntersection.y = curIntersection.y;
+
+            lastInputInside = 1;
+
+        } else {
+            mouseUnproj.set(
+                ( event.clientX / window.innerWidth ) * 2 - 1,
+                - ( event.clientY / window.innerHeight ) * 2 + 1,
+                0 );
+            
+            mouseUnproj.unproject( camera );
+        
+            var centerUnproj = currentClicked.position.clone();
+            centerUnproj.unproject (camera);
+            
+            mouseUnproj.z = 0;
+            centerUnproj.z = 0;
+            mouseUnproj.sub(centerUnproj).normalize();
+
+            curIntersection.x = mouseUnproj.x
+            curIntersection.y = mouseUnproj.y;
+
+            if (isClicking) {
+                va = experimentalBall(lastIntersection);
+                vb = experimentalBall(curIntersection);
+
+                var angle = Math.acos(Math.min(1, va.dot(vb) / va.length() / vb.length()));
+                var axis = va.cross(vb).normalize();
+                
+                // Removes extreme rotations (due to unset last vectors or change between inside/outside, not user input)
+                if (lastInputInside == 0) {
+                    temp = interactiveBoxes.quaternion.clone();
+                    axis.applyQuaternion(temp.conjugate());
+                    quaternion.setFromAxisAngle(axis, angle);
+                    quaternion.setFromAxisAngle(axis, angle);
+                    if (currentClicked != interactiveBoxes) {
+                        currentClicked.quaternion.multiplyQuaternions(quaternion, currentClicked.quaternion);
+                    }else {
+                        interactiveBoxes.quaternion.multiplyQuaternions(quaternion, interactiveBoxes.quaternion);
+                    }
+                }
+                var string = "OUT";
+                console.log({string, axis, angle});
+            }
+
+            lastIntersection.x = curIntersection.x;
+            lastIntersection.y = curIntersection.y;
+
+            lastInputInside = 0;
         }
-
-        lastIntersection.x = curIntersection.x;
-        lastIntersection.y = curIntersection.y;
-
-        lastInputInside = 0;
     }
 }
 
@@ -350,6 +355,17 @@ function onDocumentMouseWheel(event) {
 
 function animate() {
     requestAnimationFrame( animate );
+    scene.updateMatrixWorld();
+
+    raycaster.setFromCamera(mouseVector, camera);
+    var intersect = raycaster.intersectObjects(interactiveBoxes.children);
+    var objPosition;
+    
+    if ( intersect.length > 0 && isClicking && mode == "ROTATION") {
+        intersect[0].object.position.setX(intersect[0].point.x);
+        intersect[0].object.position.setY(intersect[0].point.y);
+    }
+
 
     // interactiveBoxes.rotation.x += 0.05;
     // interactiveBoxes.rotation.y += 0.05;
