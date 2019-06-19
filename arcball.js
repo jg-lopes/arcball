@@ -227,7 +227,7 @@ function onDocumentMouseMove( event ) {
     raycaster.setFromCamera(mouseVector, camera);
 
     //if (mode == "ROTATION"){ 
-    if (currentTranslating == activeArcball) {
+    if (currentTranslating == activeArcball || mode[interactiveBoxes.id] == "ROTATE") {
         if ( currentClicked != undefined && mode[currentClicked.id] == "ROTATE" ) {
             var intersects = raycaster.intersectObject(activeArcball);
             if (intersects.length > 0){
