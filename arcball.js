@@ -183,9 +183,9 @@ function onDocumentDoubleClick(event) {
         }
 
         // Square roots it to find correct maxDist
-        // Multiplies by 5 since the distances are calculated to the centroid of the boxes
+        // Multiplies by 1.5 since the distances are calculated to the centroid of the boxes
         // Needs to fill the entire box + some extra space 
-        maxDist *= 1.2;
+        maxDist *= 1.5;
         var maxDistVector = new THREE.Vector3(maxDist,maxDist,maxDist);
 
         createArcball(maxDistVector, positionArcball );
