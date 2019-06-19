@@ -189,10 +189,7 @@ function onDocumentMouseUp(event) {
     isClicking = false;
 }
 
-// Declarations outside function to avoid multiple redefinitions of variables
 var lastInputInside = 1;
-var mouseUnproj = new THREE.Vector3();
-var centerUnproj = new THREE.Vector3();
 function onDocumentMouseMove( event ) {
 
     // Transforms the mouse position in normalized device coordinates
@@ -202,79 +199,58 @@ function onDocumentMouseMove( event ) {
     raycaster.setFromCamera(mouseVector, camera);
 
     if (mode == "ROTATION"){ 
-
         if (activeArcball != undefined) {
             var intersects = raycaster.intersectObject(activeArcball);
         }
 
         // If intersected the arcball
         if (intersects != undefined && intersects.length > 0){  
-            curIntersection.x = intersects[0].point.x
-            curIntersection.y = intersects[0].point.y;
-
-            if (isClicking) {
-                va = arcballVector(lastIntersection);
-                vb = arcballVector(curIntersection);
-
-                var angle = Math.acos(Math.min(1, va.dot(vb) / va.length() / vb.length()));
-                var axis = va.cross(vb).normalize();
-                
-                // Removes extreme rotations (due to unset last vectors or change between inside/outside, not user input)
-                if (lastInputInside == 1) {
-                    executeRotation(axis, angle);
-                }
-                // var string = "IN";
-                // console.log({string, axis, angle});
-            }
-
-            lastIntersection.x = curIntersection.x;
-            lastIntersection.y = curIntersection.y;
-
+            arcballManipulation (intersects[0].point, lastInputInside, 1);
             lastInputInside = 1;
-
         } else {
-            getCenterToMouseVector(mouseUnproj, centerUnproj, event);
-
-            curIntersection.x = mouseUnproj.x
-            curIntersection.y = mouseUnproj.y;
-
-            if (isClicking) {
-                va = arcballVector(lastIntersection);
-                vb = arcballVector(curIntersection);
-
-                var angle = Math.acos(Math.min(1, va.dot(vb) / va.length() / vb.length()));
-                var axis = va.cross(vb).normalize();
-                
-                // Removes extreme rotations (due to unset last vectors or change between inside/outside, not user input)
-                if (lastInputInside == 0) {
-                    executeRotation(axis, angle);
-                }
-                // var string = "OUT";
-                // console.log({string, axis, angle});
-            }
-
-            lastIntersection.x = curIntersection.x;
-            lastIntersection.y = curIntersection.y;
-
+            arcballManipulation (getCenterToMouseVector(event), lastInputInside, 0);
             lastInputInside = 0;
         }
     }
 }
 
-function getCenterToMouseVector(mouseUnproj, centerUnproj, event) {
+function arcballManipulation (inputVector, lastInputInsideValue, desiredInputInside) {
+    curIntersection.x = inputVector.x
+    curIntersection.y = inputVector.y;
+
+    if (isClicking) {
+        va = arcballVector(lastIntersection);
+        vb = arcballVector(curIntersection);
+
+        var angle = Math.acos(Math.min(1, va.dot(vb) / va.length() / vb.length()));
+        var axis = va.cross(vb).normalize();
+        
+        // Removes extreme rotations (due to unset last vectors or change between inside/outside, not user input)
+        if (lastInputInsideValue == desiredInputInside) {
+            executeRotation(axis, angle);
+        }
+    }
+
+    lastIntersection.x = curIntersection.x;
+    lastIntersection.y = curIntersection.y;
+}
+
+function getCenterToMouseVector(event) {
+    var mouseUnproj = new THREE.Vector3();
     mouseUnproj.set(
         ( event.clientX / window.innerWidth ) * 2 - 1,
         - ( event.clientY / window.innerHeight ) * 2 + 1,
         0 );
-    
     mouseUnproj.unproject( camera );
 
-    centerUnproj = currentClicked.position.clone();
+    var centerUnproj = currentClicked.position.clone();
     centerUnproj.unproject (camera);
     
     mouseUnproj.z = 0;
     centerUnproj.z = 0;
     mouseUnproj.sub(centerUnproj).normalize();
+
+    return mouseUnproj;
 }
 
 function executeRotation(axis, angle) {
