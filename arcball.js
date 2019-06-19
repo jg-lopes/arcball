@@ -180,7 +180,9 @@ function createArcball(scaleVector, positionVector) {
 
     activeArcball.name = 'arcball';
     activeArcball.scale.set(scaleVector.x, scaleVector.y, scaleVector.z);
-    activeArcball.position.set(positionVector.x, positionVector.y, positionVector.z);
+    activeArcball.translateX(positionVector.x);
+    activeArcball.translateY(positionVector.y);
+    activeArcball.translateZ(positionVector.z);
 
     scene.add(activeArcball);
 }
@@ -203,9 +205,14 @@ function onDocumentMouseMove( event ) {
     //if (mode == "ROTATION"){ 
         if ( mode[currentClicked.id] == "ROTATE" ) {
             var intersects = raycaster.intersectObject(activeArcball);
-
+            console.log(intersects[0].point);
             if (intersects.length > 0){
-                arcballManipulation (intersects[0].point, lastInputInside, 1);
+                var temp = intersects[0].point.clone();
+                var objPosition = new THREE.Vector3();
+                scene.updateMatrixWorld();
+                objPosition.setFromMatrixPosition (intersects[0].object.matrixWorld);
+                temp.sub(objPosition);
+                arcballManipulation (temp, lastInputInside, 1);
                 lastInputInside = 1;
             } else {
                 arcballManipulation (getCenterToMouseVector(), lastInputInside, 0);
