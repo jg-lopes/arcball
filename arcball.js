@@ -5,7 +5,7 @@ var isClicking;
 var frustumSize = 40;
 
 var mouseVector = new THREE.Vector3();
-var mouseEvent = new THREE.Vector2();
+var mouseEvent = new THREE.Vector3();
 var quaternion = new THREE.Quaternion();
 var curIntersection = new THREE.Vector2();
 var lastIntersection = new THREE.Vector2();
@@ -119,7 +119,8 @@ function onDocumentDoubleClick(event) {
     scene.remove(scene.getObjectByName('arcball'));
     // This both allows the mouse to click objects "behind the arcball"
         // and as well allows for seamlessly changing active arcballs
-
+    
+    currentTranslating = undefined;
     // Raycaster to discover intersections
     raycaster.setFromCamera(mouseVector, camera);
     var intersects = raycaster.intersectObjects(scene.children, true);
@@ -224,10 +225,10 @@ function onDocumentMouseMove( event ) {
     mouseVector.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
     
     raycaster.setFromCamera(mouseVector, camera);
-    console.log(currentClicked);
 
     //if (mode == "ROTATION"){ 
-        if ( mode[currentClicked.id] == "ROTATE" ) {
+    if (currentTranslating == activeArcball) {
+        if ( currentClicked != undefined && mode[currentClicked.id] == "ROTATE" ) {
             var intersects = raycaster.intersectObject(activeArcball);
             if (intersects.length > 0){
                 var temp = intersects[0].point.clone();
@@ -243,6 +244,7 @@ function onDocumentMouseMove( event ) {
                 lastInputInside = 0;
             }
         }
+    }
 
         // If intersected the arcball
         
@@ -360,18 +362,33 @@ function animate() {
     raycaster.setFromCamera(mouseVector, camera);
     var intersect = raycaster.intersectObjects(interactiveBoxes.children);
     
-    if ( intersect.length > 0 && isClicking && mode[intersect[0].object.id] == "TRANSLATE" && currentTranslating == intersect[0].object && currentTranslating != activeArcball) {
-        intersect[0].object.position.setX(intersect[0].point.x);
-        intersect[0].object.position.setY(intersect[0].point.y);
+    if ( intersect.length > 0 && isClicking && currentTranslating == intersect[0].object && currentTranslating != activeArcball && mode[intersect[0].object.id] == "TRANSLATE") {
+        //var temp = intersects[0].point.clone();
+        //var objPosition = new THREE.Vector3();
+        //scene.updateMatrixWorld();
+        //objPosition.setFromMatrixPosition (intersects[0].object.matrixWorld);
+        //temp.sub(objPosition);
+    
+        mouseEvent = mouseVector.clone();
+        mouseEvent.unproject(camera);
+        intersect[0].object.position.setX(mouseEvent.x);
+        intersect[0].object.position.setY(mouseEvent.y);
+        intersect[0].object.position.setZ(mouseEvent.z);
+        
+
         currentTranslating = intersect[0].object;
 
-    } else if (intersect.length == 0 && currentTranslating != undefined && currentTranslating != activeArcball) {
+    } else if (intersect.length == 0 && currentTranslating != undefined && currentTranslating != activeArcball && mode[currentTranslating.id] == "TRANSLATE") {
         
         mouseEvent = mouseVector.clone();
         mouseEvent.unproject(camera);
 
+        console.log(currentTranslating.position.x);
+        console.log(mouseEvent.x);
+
         currentTranslating.position.setX(mouseEvent.x);
         currentTranslating.position.setY(mouseEvent.y);
+        currentTranslating.position.setZ(mouseEvent.z);
     }
     renderer.render( scene, camera );
 }
