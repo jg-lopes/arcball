@@ -21,6 +21,35 @@ var mode = "ROTATION";
 init();
 animate();
 
+function createCube(scaleVector, translateVector, rotateVector) {
+
+    var geometry = new THREE.BoxGeometry(1, 1, 1);
+
+    // Colors of the face of the cube (following a Rubik's Cube model)
+    // Blue - FRONT // Green - BACK // Yellow - UP // White - DOWN // Red - RIGHT // Orange - LEFT
+    var colors = [ 'red', 'orange', 'yellow', 'white', 'blue', 'green'];
+    for ( var i = 0; i < geometry.faces.length; i += 2 ) {
+        var color = new THREE.Color( colors[i/2] );
+        geometry.faces[ i ].color.set(color);
+        geometry.faces[ i + 1 ].color.set( color);
+    }
+    var material = new THREE.MeshBasicMaterial( { color: 0xffffff, vertexColors: THREE.FaceColors } );
+
+    var box = new THREE.Mesh( geometry, material );
+
+
+    box.scale.set(scaleVector[0], scaleVector[1], scaleVector[2]);
+
+    box.translateX(translateVector[0]);
+    box.translateY(translateVector[1]);
+    box.translateZ(translateVector[2]);
+
+    box.rotateX(rotateVector[0]);
+    box.rotateY(rotateVector[1]);
+    box.rotateZ(rotateVector[2]);
+
+    interactiveBoxes.add( box );
+}
 
 
 function init() {
@@ -42,71 +71,13 @@ function init() {
     // Introducing the cube + arcball visualization object
     interactiveBoxes = new THREE.Group();
 
-    // Cube
-    var geometry = new THREE.BoxGeometry( 1, 1, 1);
-    // Colors of the face of the cube (following a Rubik's Cube model)
-    // Blue - FRONT // Green - BACK // Yellow - UP // White - DOWN // Red - RIGHT // Orange - LEFT
-    var colors = [ 'red', 'orange', 'yellow', 'white', 'blue', 'green'];
-    for ( var i = 0; i < geometry.faces.length; i += 2 ) {
-        var color = new THREE.Color( colors[i/2] );
-        geometry.faces[ i ].color.set(color);
-        geometry.faces[ i + 1 ].color.set( color);
-    }
-    var material = new THREE.MeshBasicMaterial( { color: 0xffffff, vertexColors: THREE.FaceColors } );
-    var box = new THREE.Mesh( geometry, material );
-
-    box.scale.set(0.5, 0.5, 0.5);
-    box.translateX(-0.5);
-    box.translateY(-0.5);
-    box.translateZ(-0.7);
-
-    box.rotateX(Math.PI/5);
-    box.rotateY(Math.PI/5);
-
-    interactiveBoxes.add( box );
-
-    // Cube
-    var geometry = new THREE.BoxGeometry( 1, 1, 1);
-    // Colors of the face of the cube (following a Rubik's Cube model)
-    // Blue - FRONT // Green - BACK // Yellow - UP // White - DOWN // Red - RIGHT // Orange - LEFT
-    var colors = [ 'red', 'orange', 'yellow', 'white', 'blue', 'green'];
-    for ( var i = 0; i < geometry.faces.length; i += 2 ) {
-        var color = new THREE.Color( colors[i/2] );
-        geometry.faces[ i ].color.set(color);
-        geometry.faces[ i + 1 ].color.set( color);
-    }
-    var material = new THREE.MeshBasicMaterial( { color: 0xffffff, vertexColors: THREE.FaceColors } );
-    var box2 = new THREE.Mesh( geometry, material );
-
-    box2.scale.set(0.75, 0.75, 0.75);
-    box2.translateX(0.3);
-    box2.translateY(-0.2);
-    box2.translateZ(-0.4);
-
-
-    box2.rotateY(Math.PI/5);
-    box2.rotateZ(Math.PI/5);
-
-    interactiveBoxes.add( box2 );
+    createCube([0.5,0.5,0.5], [-0.5, -0.5, -0.7], [Math.PI/5, Math.PI/5, 0]);
+    createCube([0.75,0.75,0.75], [0.3, -0.2, -0.4], [Math.PI/5, Math.PI/5, 0]);
 
     scene.add( interactiveBoxes );
 
-    // var axesHelper = new THREE.AxesHelper( 1 );
-    // scene.add( axesHelper );
-
-    // // Sphere
-    // var sphereGeom = new THREE.SphereGeometry(1, 100, 100);
-    // var blueMaterial = new THREE.MeshBasicMaterial( { color: 0x000000, transparent: true, opacity: 0.3 } );
-    // var sphere = new THREE.Mesh( sphereGeom, blueMaterial );
-    // interactiveBox.add(sphere);
-    
-    // scene.add(interactiveBox);
-
-    camera.zoom = 0.1;
-    camera.updateProjectionMatrix();
-
-
-
+    // camera.zoom = 0.1;
+    // camera.updateProjectionMatrix();
 
     document.addEventListener( 'mousedown', onDocumentMouseDown, false);
     document.addEventListener( 'mouseup', onDocumentMouseUp, false);
@@ -114,8 +85,6 @@ function init() {
     window.addEventListener( 'resize', onWindowResize, false );
     document.addEventListener( 'mousewheel', onDocumentMouseWheel, false);
     document.addEventListener( 'dblclick', onDocumentDoubleClick, false);
-
-
 
     document.body.appendChild( renderer.domElement );
 }
