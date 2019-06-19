@@ -88,13 +88,10 @@ function init() {
     document.body.appendChild( renderer.domElement );
 }
 
-function experimentalBall(uv) {
+function arcballVector(vector) {
     P = new THREE.Vector3;
 
-    P.set(
-        uv.x,
-        uv.y,
-        0 ); 
+    P.set( vector.x,vector.y, 0 ); 
 
     OP_length = P.length();
 
@@ -218,8 +215,8 @@ function onDocumentMouseMove( event ) {
             curIntersection.y = intersects[0].point.y;
 
             if (isClicking) {
-                va = experimentalBall(lastIntersection);
-                vb = experimentalBall(curIntersection);
+                va = arcballVector(lastIntersection);
+                vb = arcballVector(curIntersection);
 
                 var angle = Math.acos(Math.min(1, va.dot(vb) / va.length() / vb.length()));
                 var axis = va.cross(vb).normalize();
@@ -263,8 +260,8 @@ function onDocumentMouseMove( event ) {
             curIntersection.y = mouseUnproj.y;
 
             if (isClicking) {
-                va = experimentalBall(lastIntersection);
-                vb = experimentalBall(curIntersection);
+                va = arcballVector(lastIntersection);
+                vb = arcballVector(curIntersection);
 
                 var angle = Math.acos(Math.min(1, va.dot(vb) / va.length() / vb.length()));
                 var axis = va.cross(vb).normalize();
@@ -308,7 +305,7 @@ function onWindowResize() {
 }
 
 function onDocumentMouseWheel(event) {
-    // Mouse Wheel regulates the zoom of the camera
+    // Mouse wheel regulates the zoom of the camera
 
     if (event.deltaY < 0) { 
         if (camera.zoom > 0.1)
