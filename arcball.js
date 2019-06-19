@@ -371,6 +371,10 @@ function animate() {
     
         mouseEvent = mouseVector.clone();
         mouseEvent.unproject(camera);
+
+        var temp = interactiveBoxes.quaternion.clone();
+        mouseEvent.applyQuaternion(temp.conjugate())
+
         intersect[0].object.position.setX(mouseEvent.x);
         intersect[0].object.position.setY(mouseEvent.y);
         intersect[0].object.position.setZ(mouseEvent.z);
@@ -382,6 +386,9 @@ function animate() {
         
         mouseEvent = mouseVector.clone();
         mouseEvent.unproject(camera);
+
+        var temp = interactiveBoxes.quaternion.clone();
+        mouseEvent.applyQuaternion(temp.conjugate())
 
         console.log(currentTranslating.position.x);
         console.log(mouseEvent.x);
