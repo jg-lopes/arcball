@@ -86,7 +86,7 @@ function init() {
     document.addEventListener( 'mouseup', onDocumentMouseUp, false);
     document.addEventListener( 'mousemove', onDocumentMouseMove, false );
     window.addEventListener( 'resize', onWindowResize, false );
-    document.addEventListener( 'mousewheel', onDocumentMouseWheel, false);
+    document.addEventListener( 'wheel', onDocumentMouseWheel, false);
     document.addEventListener( 'dblclick', onDocumentDoubleClick, false);
 
     document.body.appendChild( renderer.domElement );
