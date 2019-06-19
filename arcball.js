@@ -95,6 +95,12 @@ function init() {
 // Declares the start of a click
 function onDocumentMouseDown(event) {
     isClicking = true;
+    raycaster.setFromCamera(mouseVector, camera);
+    var intersects = raycaster.intersectObjects(scene.children, true);
+
+    if (intersects.length > 0) {
+        currentTranslating = intersects[0].object;
+    }
 }
 
 // Declares the ending of a click
@@ -154,15 +160,15 @@ function onDocumentDoubleClick(event) {
 
 
         var maxDist = 0;
-        var maxBox, distance;
+        var distance;
         // Finds the distance to the furthest cube from centroid
         for (i = 0; i < boxList.length; i++) {
             
-            px = boxList[i].position.x - positionArcball.x;
-            py = boxList[i].position.y - positionArcball.y;
-            pz = boxList[i].position.z - positionArcball.z;
+            var px = boxList[i].position.x - positionArcball.x;
+            var py = boxList[i].position.y - positionArcball.y;
+            var pz = boxList[i].position.z - positionArcball.z;
 
-            distance = px * px + py * py + pz * pz;
+            distance = Math.sqrt(px * px + py * py + pz * pz);
 
             if (distance > maxDist) { 
                 maxDist = distance;
@@ -172,9 +178,10 @@ function onDocumentDoubleClick(event) {
         // Square roots it to find correct maxDist
         // Multiplies by 5 since the distances are calculated to the centroid of the boxes
         // Needs to fill the entire box + some extra space 
-        maxDist = Math.sqrt(maxDist) * 5;
+        maxDist *= 1.2;
+        var maxDistVector = new THREE.Vector3(maxDist,maxDist,maxDist);
 
-        createArcball( new THREE.Vector3(maxDist,maxDist,maxDist), positionArcball );
+        createArcball(maxDistVector, positionArcball );
     }
 }
 
@@ -348,14 +355,14 @@ function animate() {
 
     raycaster.setFromCamera(mouseVector, camera);
     var intersect = raycaster.intersectObjects(interactiveBoxes.children);
-    var objPosition;
     
-    if ( intersect.length > 0 && isClicking && mode[intersect[0].object.id] == "TRANSLATE") {
+    if ( intersect.length > 0 && isClicking && mode[intersect[0].object.id] == "TRANSLATE" && currentTranslating == intersect[0].object && currentTranslating != activeArcball) {
         intersect[0].object.position.setX(intersect[0].point.x);
         intersect[0].object.position.setY(intersect[0].point.y);
         currentTranslating = intersect[0].object;
         console.log(intersect[0].point);
-    } else if (intersect.length == 0 && currentTranslating != undefined) {
+
+    } else if (intersect.length == 0 && currentTranslating != undefined && currentTranslating != activeArcball) {
         
         mouseEvent = mouseVector.clone();
         mouseEvent.unproject(camera);
