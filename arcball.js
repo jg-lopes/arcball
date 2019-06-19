@@ -221,16 +221,7 @@ function onDocumentMouseMove( event ) {
                 
                 // Removes extreme rotations (due to unset last vectors or change between inside/outside, not user input)
                 if (lastInputInside == 1) {
-                    
-                    if (currentClicked != interactiveBoxes) {
-                        temp = interactiveBoxes.quaternion.clone();
-                        axis.applyQuaternion(temp.conjugate());
-                        quaternion.setFromAxisAngle(axis, angle);
-                        currentClicked.quaternion.multiplyQuaternions(quaternion, currentClicked.quaternion);
-                    } else {
-                        quaternion.setFromAxisAngle(axis, angle);
-                        interactiveBoxes.quaternion.multiplyQuaternions(quaternion, interactiveBoxes.quaternion);
-                    }
+                    executeRotation(axis, angle);
                 }
                 // var string = "IN";
                 // console.log({string, axis, angle});
@@ -242,19 +233,7 @@ function onDocumentMouseMove( event ) {
             lastInputInside = 1;
 
         } else {
-            mouseUnproj.set(
-                ( event.clientX / window.innerWidth ) * 2 - 1,
-                - ( event.clientY / window.innerHeight ) * 2 + 1,
-                0 );
-            
-            mouseUnproj.unproject( camera );
-        
-            var centerUnproj = currentClicked.position.clone();
-            centerUnproj.unproject (camera);
-            
-            mouseUnproj.z = 0;
-            centerUnproj.z = 0;
-            mouseUnproj.sub(centerUnproj).normalize();
+            getCenterToMouseVector(mouseUnproj, centerUnproj, event);
 
             curIntersection.x = mouseUnproj.x
             curIntersection.y = mouseUnproj.y;
@@ -268,14 +247,7 @@ function onDocumentMouseMove( event ) {
                 
                 // Removes extreme rotations (due to unset last vectors or change between inside/outside, not user input)
                 if (lastInputInside == 0) {
-                    if (currentClicked != interactiveBoxes) {
-                        temp = interactiveBoxes.quaternion.clone();
-                        axis.applyQuaternion(temp.conjugate());
-                        quaternion.setFromAxisAngle(axis, angle);
-                        currentClicked.quaternion.multiplyQuaternions(quaternion, currentClicked.quaternion);
-                    } else {
-                        interactiveBoxes.quaternion.multiplyQuaternions(quaternion, interactiveBoxes.quaternion);
-                    }
+                    executeRotation(axis, angle);
                 }
                 // var string = "OUT";
                 // console.log({string, axis, angle});
@@ -289,6 +261,33 @@ function onDocumentMouseMove( event ) {
     }
 }
 
+function getCenterToMouseVector(mouseUnproj, centerUnproj, event) {
+    mouseUnproj.set(
+        ( event.clientX / window.innerWidth ) * 2 - 1,
+        - ( event.clientY / window.innerHeight ) * 2 + 1,
+        0 );
+    
+    mouseUnproj.unproject( camera );
+
+    centerUnproj = currentClicked.position.clone();
+    centerUnproj.unproject (camera);
+    
+    mouseUnproj.z = 0;
+    centerUnproj.z = 0;
+    mouseUnproj.sub(centerUnproj).normalize();
+}
+
+function executeRotation(axis, angle) {
+    if (currentClicked != interactiveBoxes) {
+        var temp = interactiveBoxes.quaternion.clone();
+        axis.applyQuaternion(temp.conjugate());
+        quaternion.setFromAxisAngle(axis, angle);
+        currentClicked.quaternion.multiplyQuaternions(quaternion, currentClicked.quaternion);
+    } else {
+        quaternion.setFromAxisAngle(axis, angle);
+        interactiveBoxes.quaternion.multiplyQuaternions(quaternion, interactiveBoxes.quaternion);
+    }
+}
 
 function onWindowResize() {
     // Manipulates the camera so resizing has a consistent behaviour
