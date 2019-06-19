@@ -206,7 +206,7 @@ function onDocumentMouseMove( event ) {
                 arcballManipulation (intersects[0].point, lastInputInside, 1);
                 lastInputInside = 1;
             } else {
-                arcballManipulation (getCenterToMouseVector(event), lastInputInside, 0);
+                arcballManipulation (getCenterToMouseVector(), lastInputInside, 0);
                 lastInputInside = 0;
             }
         }
@@ -235,8 +235,6 @@ function arcballVector(vector) {
 
 // Receives an vector to serve as a manipulator of the arcball, and does the required calculations
 function arcballManipulation (inputVector, lastInputInsideValue, desiredInputInside) {
-    console.log("Rotation was made");
-    console.log(desiredInputInside);
     curIntersection.x = inputVector.x
     curIntersection.y = inputVector.y;
 
@@ -258,22 +256,21 @@ function arcballManipulation (inputVector, lastInputInsideValue, desiredInputIns
 }
 
 // Gets a vector pointing from the center of a arcball to the mouse position
-function getCenterToMouseVector(event) {
-    var mouseUnproj = new THREE.Vector3();
-    mouseUnproj.set(
-        ( event.clientX / window.innerWidth ) * 2 - 1,
-        - ( event.clientY / window.innerHeight ) * 2 + 1,
-        0 );
-    mouseUnproj.unproject( camera );
+function getCenterToMouseVector() {
+    var mouse;
+    mouse = mouseVector.clone();
 
-    var centerUnproj = currentClicked.position.clone();
-    centerUnproj.unproject (camera);
-    
-    mouseUnproj.z = 0;
-    centerUnproj.z = 0;
-    mouseUnproj.sub(centerUnproj).normalize();
+    scene.updateMatrixWorld();
+    center.setFromMatrixPosition (activeArcball.matrixWorld);
+    center.unproject(camera).normalize(); 
 
-    return mouseUnproj;
+    mouse.z = 0;
+    center.z = 0;
+ 
+
+
+    mouse.sub(center).normalize();
+    return mouse;
 }
 
 // Executes the rotation defined by axis angle in the clicked object
