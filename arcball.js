@@ -14,7 +14,7 @@ var interactiveBoxes;
 var currentClicked;
 var activeArcball;
 
-var mode = "ROTATION";
+var mode = {};
 
 init();
 animate();
@@ -111,18 +111,24 @@ function onDocumentDoubleClick(event) {
     raycaster.setFromCamera(mouseVector, camera);
     var intersects = raycaster.intersectObjects(scene.children, true);
 
-    // Analyses if the double click was made inside or outside an object
     if (intersects.length > 0) {
         currentClicked = intersects[0].object;
         
-        objScale = intersects[0].object.scale;
-        // Finds the position of the center of the object in the world coordinates
-        scene.updateMatrixWorld();
-        objPosition.setFromMatrixPosition (intersects[0].object.matrixWorld);
+        if (mode[currentClicked.id] == "ROTATE") {
+            mode[currentClicked.id] = "TRANSLATE";
+        } else {
+            mode[currentClicked.id] = "ROTATE";
+        }
 
-        createArcball(objScale, objPosition);
-
+        if (mode[currentClicked.id] == "ROTATE") {
         
+            objScale = intersects[0].object.scale;
+            // Finds the position of the center of the object in the world coordinates
+            scene.updateMatrixWorld();
+            objPosition.setFromMatrixPosition (intersects[0].object.matrixWorld);
+
+            createArcball(objScale, objPosition);
+        }
     } else {
         currentClicked = interactiveBoxes;
 
@@ -179,9 +185,6 @@ function createArcball(scaleVector, positionVector) {
 
 
 // #############################################################################################
-
-
-// #############################################################################################
 // Mouse movement functions
 // #############################################################################################
 
@@ -195,20 +198,22 @@ function onDocumentMouseMove( event ) {
     
     raycaster.setFromCamera(mouseVector, camera);
 
-    if (mode == "ROTATION"){ 
-        if (activeArcball != undefined) {
+    //if (mode == "ROTATION"){ 
+        if ( mode[currentClicked.id] == "ROTATE" ) {
             var intersects = raycaster.intersectObject(activeArcball);
+
+            if (intersects.length > 0){
+                arcballManipulation (intersects[0].point, lastInputInside, 1);
+                lastInputInside = 1;
+            } else {
+                arcballManipulation (getCenterToMouseVector(event), lastInputInside, 0);
+                lastInputInside = 0;
+            }
         }
 
         // If intersected the arcball
-        if (intersects != undefined && intersects.length > 0){  
-            arcballManipulation (intersects[0].point, lastInputInside, 1);
-            lastInputInside = 1;
-        } else {
-            arcballManipulation (getCenterToMouseVector(event), lastInputInside, 0);
-            lastInputInside = 0;
-        }
-    }
+        
+    //}
 }
 
 // Given a vector clicked outside the arcball, calculates the normalized vector for introducing rotations
@@ -230,6 +235,8 @@ function arcballVector(vector) {
 
 // Receives an vector to serve as a manipulator of the arcball, and does the required calculations
 function arcballManipulation (inputVector, lastInputInsideValue, desiredInputInside) {
+    console.log("Rotation was made");
+    console.log(desiredInputInside);
     curIntersection.x = inputVector.x
     curIntersection.y = inputVector.y;
 
@@ -319,13 +326,13 @@ function animate() {
     requestAnimationFrame( animate );
     //scene.updateMatrixWorld();
 
-    //raycaster.setFromCamera(mouseVector, camera);
-    // var intersect = raycaster.intersectObjects(interactiveBoxes.children);
-    // var objPosition;
+    raycaster.setFromCamera(mouseVector, camera);
+    var intersect = raycaster.intersectObjects(interactiveBoxes.children);
+    var objPosition;
     
-    // if ( intersect.length > 0 && isClicking && mode == "ROTATION") {
-    //     intersect[0].object.position.setX(intersect[0].point.x);
-    //     intersect[0].object.position.setY(intersect[0].point.y);
-    // }
+    if ( intersect.length > 0 && isClicking && mode[intersect[0].object.id] == "TRANSLATE") {
+        intersect[0].object.position.setX(intersect[0].point.x);
+        intersect[0].object.position.setY(intersect[0].point.y);
+    } 
     renderer.render( scene, camera );
 }
