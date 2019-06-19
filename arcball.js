@@ -21,7 +21,7 @@ var mode = "ROTATION";
 init();
 animate();
 
-function createCube(scaleVector, translateVector, rotateVector) {
+function createCube(scaleArray, translateArray, rotateArray) {
 
     var geometry = new THREE.BoxGeometry(1, 1, 1);
 
@@ -38,15 +38,15 @@ function createCube(scaleVector, translateVector, rotateVector) {
     var box = new THREE.Mesh( geometry, material );
 
 
-    box.scale.set(scaleVector[0], scaleVector[1], scaleVector[2]);
+    box.scale.set(scaleArray[0], scaleArray[1], scaleArray[2]);
 
-    box.translateX(translateVector[0]);
-    box.translateY(translateVector[1]);
-    box.translateZ(translateVector[2]);
+    box.translateX(translateArray[0]);
+    box.translateY(translateArray[1]);
+    box.translateZ(translateArray[2]);
 
-    box.rotateX(rotateVector[0]);
-    box.rotateY(rotateVector[1]);
-    box.rotateZ(rotateVector[2]);
+    box.rotateX(rotateArray[0]);
+    box.rotateY(rotateArray[1]);
+    box.rotateZ(rotateArray[2]);
 
     interactiveBoxes.add( box );
 }
@@ -104,47 +104,49 @@ function arcballVector(vector) {
     return P;
 }
 
+function createArcball(scaleVector, positionVector) {
+    var sphereGeom = new THREE.SphereGeometry(1, 100, 100);
+    var blueMaterial = new THREE.MeshBasicMaterial( { color: 0x000000, transparent: true, opacity: 0.3 } );
+    activeArcball = new THREE.Mesh( sphereGeom, blueMaterial );
+
+    activeArcball.name = 'arcball';
+    activeArcball.scale.set(scaleVector.x, scaleVector.y, scaleVector.z);
+    activeArcball.position.set(positionVector.x, positionVector.y, positionVector.z);
+
+    scene.add(activeArcball);
+}
+
 function onDocumentMouseDown(event) {
     isClicking = true;
 }
 
 objPosition = new THREE.Vector3();
-function onDocumentDoubleClick(event) {;
+function onDocumentDoubleClick(event) {
+    // Removes previously placed arcball
     scene.remove(scene.getObjectByName('arcball'));
+    // This both allows the mouse to click objects "behind the arcball"
+        // and as well allows for seamlessly changing active arcballs
+
+    // Raycaster to discover intersections
     raycaster.setFromCamera(mouseVector, camera);
-
     var intersects = raycaster.intersectObjects(scene.children, true);
-    if (intersects.length > 0) {
 
+    // Analyses if the double click was made inside or outside an object
+    if (intersects.length > 0) {
         currentClicked = intersects[0].object;
         
-
-        var sphereGeom = new THREE.SphereGeometry(1, 100, 100);
-        var blueMaterial = new THREE.MeshBasicMaterial( { color: 0x000000, transparent: true, opacity: 0.3 } );
-        activeArcball = new THREE.Mesh( sphereGeom, blueMaterial );
-        
-        activeArcball.name = 'arcball';
         objScale = intersects[0].object.scale;
-
+        // Finds the position of the center of the object in the world coordinates
         scene.updateMatrixWorld();
         objPosition.setFromMatrixPosition (intersects[0].object.matrixWorld);
 
-        activeArcball.scale.set(objScale.x, objScale.y, objScale.z);
-        activeArcball.position.set(objPosition.x, objPosition.y, objPosition.z);
+        createArcball(objScale, objPosition);
 
-        scene.add(activeArcball);
         
     } else {
         currentClicked = interactiveBoxes;
 
-        var sphereGeom = new THREE.SphereGeometry(1, 100, 100);
-        var blueMaterial = new THREE.MeshBasicMaterial( { color: 0x000000, transparent: true, opacity: 0.3 } );
-        activeArcball = new THREE.Mesh( sphereGeom, blueMaterial );
-        
-        activeArcball.name = 'arcball';
-        
         var boxList = interactiveBoxes.children;
-
         var positionArcball = new THREE.Vector3(0, 0, 0);
         
         // Finds the centroid of all the existing cubes
@@ -179,11 +181,7 @@ function onDocumentDoubleClick(event) {;
         // Needs to fill the entire box + some extra space 
         maxDist = Math.sqrt(maxDist) * 5;
 
-
-        activeArcball.position.set(positionArcball.x, positionArcball.y, positionArcball.z);
-        activeArcball.scale.set(maxDist, maxDist, maxDist);
-        scene.add(activeArcball);
-
+        createArcball( new THREE.Vector3(maxDist,maxDist,maxDist), positionArcball );
     }
 }
 
