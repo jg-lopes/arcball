@@ -24,8 +24,8 @@ function createCube() {
     var geometry = new THREE.BoxGeometry(1, 1, 1);
 
     // Colors of the face of the cube (following a Rubik's Cube model)
-    // Blue - FRONT // Green - BACK // Yellow - UP // White - DOWN // Red - RIGHT // Orange - LEFT
-    var colors = [ 'red', 'orange', 'yellow', 'white', 'blue', 'green'];
+    // Blue - FRONT // Green - BACK // Yellow - UP // gray - DOWN // Red - RIGHT // Orange - LEFT
+    var colors = [ 'red', 'orange', 'yellow', 'gray', 'blue', 'green'];
     for ( var i = 0; i < geometry.faces.length; i += 2 ) {
         var color = new THREE.Color( colors[i/2] );
         geometry.faces[ i ].color.set(color);
