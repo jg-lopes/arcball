@@ -146,6 +146,12 @@ function onDocumentDoubleClick(event) {
         currentClicked = interactiveBoxes;
 
         var boxList = interactiveBoxes.children;
+
+        for (i = 0; i < boxList.length; i++ ){
+            mode[boxList[i].id] = "ROTATE";
+        }
+        mode[interactiveBoxes.id] = "ROTATE";
+        
         var positionArcball = new THREE.Vector3(0, 0, 0);
         
         // Finds the centroid of all the existing cubes
@@ -218,6 +224,7 @@ function onDocumentMouseMove( event ) {
     mouseVector.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
     
     raycaster.setFromCamera(mouseVector, camera);
+    console.log(currentClicked);
 
     //if (mode == "ROTATION"){ 
         if ( mode[currentClicked.id] == "ROTATE" ) {
@@ -231,12 +238,9 @@ function onDocumentMouseMove( event ) {
 
                 arcballManipulation (temp, lastInputInside, 1);
                 lastInputInside = 1;
-
-                console.log("IN");
             } else {
                 arcballManipulation (getCenterToMouseVector(), lastInputInside, 0);
                 lastInputInside = 0;
-                console.log("OUT");
             }
         }
 
@@ -360,7 +364,6 @@ function animate() {
         intersect[0].object.position.setX(intersect[0].point.x);
         intersect[0].object.position.setY(intersect[0].point.y);
         currentTranslating = intersect[0].object;
-        console.log(intersect[0].point);
 
     } else if (intersect.length == 0 && currentTranslating != undefined && currentTranslating != activeArcball) {
         
@@ -369,7 +372,6 @@ function animate() {
 
         currentTranslating.position.setX(mouseEvent.x);
         currentTranslating.position.setY(mouseEvent.y);
-        console.log(mouseEvent);
     }
     renderer.render( scene, camera );
 }
