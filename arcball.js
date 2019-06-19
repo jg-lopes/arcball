@@ -344,12 +344,12 @@ function onDocumentMouseWheel(event) {
     
 
     if (event.deltaY < 0) { 
-        if (camera.zoom > 0.1)
-            camera.zoom /= 1.25;
+        camera.zoom *= 1.25;
     };
     
     if (event.deltaY > 0) { 
-        camera.zoom *= 1.25;
+        if (camera.zoom > 0.1)
+            camera.zoom /= 1.25;
     };
     camera.updateProjectionMatrix();
 
