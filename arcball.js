@@ -2,7 +2,7 @@ var containers;
 var camera, scene, raycaster, renderer;
 var mouse = new THREE.Vector2();
 var isClicking;
-var frustumSize = 2;
+var frustumSize = 40;
 
 var mouseVector = new THREE.Vector3();
 var quaternion = new THREE.Quaternion();
@@ -19,7 +19,7 @@ var mode = {};
 init();
 animate();
 
-function createCube(scaleArray, translateArray, rotateArray) {
+function createCube() {
 
     var geometry = new THREE.BoxGeometry(1, 1, 1);
 
@@ -35,16 +35,17 @@ function createCube(scaleArray, translateArray, rotateArray) {
 
     var box = new THREE.Mesh( geometry, material );
 
+    box.position.x = Math.random() * 30 - 15;
+    box.position.y = Math.random() * 30 - 15;
+    box.position.z = Math.random() * 30 - 15;
 
-    box.scale.set(scaleArray[0], scaleArray[1], scaleArray[2]);
+    box.rotation.x = Math.random() * 2 * Math.PI;
+    box.rotation.y = Math.random() * 2 * Math.PI;
+    box.rotation.z = Math.random() * 2 * Math.PI;
 
-    box.translateX(translateArray[0]);
-    box.translateY(translateArray[1]);
-    box.translateZ(translateArray[2]);
-
-    box.rotateX(rotateArray[0]);
-    box.rotateY(rotateArray[1]);
-    box.rotateZ(rotateArray[2]);
+    box.scale.x = Math.random() * 2 + 1;
+    box.scale.y = Math.random() * 2 + 1;
+    box.scale.z = Math.random() * 2 + 1;
     
     mode[box.id] = "TRANSLATE";
 
@@ -70,8 +71,9 @@ function init() {
     // Introducing the cube + arcball visualization object
     interactiveBoxes = new THREE.Group();
 
-    createCube([0.5,0.5,0.5], [-0.5, -0.5, -0.7], [Math.PI/5, Math.PI/5, 0]);
-    createCube([0.75,0.75,0.75], [0.3, -0.2, -0.4], [Math.PI/5, Math.PI/5, 0]);
+    for (var i = 0; i < 10; i++) {
+        createCube();
+    }
 
     scene.add( interactiveBoxes );
 
@@ -179,7 +181,10 @@ function createArcball(scaleVector, positionVector) {
     activeArcball = new THREE.Mesh( sphereGeom, blueMaterial );
 
     activeArcball.name = 'arcball';
-    activeArcball.scale.set(scaleVector.x, scaleVector.y, scaleVector.z);
+
+    var maxScale = Math.max(scaleVector.x, scaleVector.y, scaleVector.z);
+
+    activeArcball.scale.set(maxScale, maxScale, maxScale);
     activeArcball.translateX(positionVector.x);
     activeArcball.translateY(positionVector.y);
     activeArcball.translateZ(positionVector.z);
@@ -205,18 +210,21 @@ function onDocumentMouseMove( event ) {
     //if (mode == "ROTATION"){ 
         if ( mode[currentClicked.id] == "ROTATE" ) {
             var intersects = raycaster.intersectObject(activeArcball);
-            console.log(intersects[0].point);
             if (intersects.length > 0){
                 var temp = intersects[0].point.clone();
                 var objPosition = new THREE.Vector3();
                 scene.updateMatrixWorld();
                 objPosition.setFromMatrixPosition (intersects[0].object.matrixWorld);
-                temp.sub(objPosition);
+                temp.sub(objPosition).normalize();
+
                 arcballManipulation (temp, lastInputInside, 1);
                 lastInputInside = 1;
+
+                console.log("IN");
             } else {
                 arcballManipulation (getCenterToMouseVector(), lastInputInside, 0);
                 lastInputInside = 0;
+                console.log("OUT");
             }
         }
 
