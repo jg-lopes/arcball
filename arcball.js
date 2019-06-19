@@ -45,6 +45,8 @@ function createCube(scaleArray, translateArray, rotateArray) {
     box.rotateX(rotateArray[0]);
     box.rotateY(rotateArray[1]);
     box.rotateZ(rotateArray[2]);
+    
+    mode[box.id] = "TRANSLATE";
 
     interactiveBoxes.add( box );
 }
@@ -258,6 +260,7 @@ function arcballManipulation (inputVector, lastInputInsideValue, desiredInputIns
 // Gets a vector pointing from the center of a arcball to the mouse position
 function getCenterToMouseVector() {
     var mouse;
+    var center = new THREE.Vector3();
     mouse = mouseVector.clone();
 
     scene.updateMatrixWorld();
