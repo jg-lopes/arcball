@@ -202,7 +202,7 @@ function onDocumentMouseMove( event ) {
 
     mouseVector.x = ( event.clientX / window.innerWidth ) * 2 - 1;
     mouseVector.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-    
+    raycaster.setFromCamera(mouseVector, camera);
 
     if (mode == "ROTATION"){ 
 
@@ -318,16 +318,16 @@ function onDocumentMouseWheel(event) {
 
 function animate() {
     requestAnimationFrame( animate );
-    scene.updateMatrixWorld();
+    //scene.updateMatrixWorld();
 
-    raycaster.setFromCamera(mouseVector, camera);
-    var intersect = raycaster.intersectObjects(interactiveBoxes.children);
-    var objPosition;
+    //raycaster.setFromCamera(mouseVector, camera);
+    // var intersect = raycaster.intersectObjects(interactiveBoxes.children);
+    // var objPosition;
     
-    if ( intersect.length > 0 && isClicking && mode == "ROTATION") {
-        intersect[0].object.position.setX(intersect[0].point.x);
-        intersect[0].object.position.setY(intersect[0].point.y);
-    }
+    // if ( intersect.length > 0 && isClicking && mode == "ROTATION") {
+    //     intersect[0].object.position.setX(intersect[0].point.x);
+    //     intersect[0].object.position.setY(intersect[0].point.y);
+    // }
 
 
     // interactiveBoxes.rotation.x += 0.05;
