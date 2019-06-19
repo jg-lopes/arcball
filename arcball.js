@@ -56,7 +56,6 @@ function init() {
 
     var aspect = window.innerWidth / window.innerHeight;
     camera = new THREE.OrthographicCamera( frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, 1, 1000 );
-    //camera = new THREE.OrthographicCamera( -1, 1, 1, -1, - 500, 500); 
     camera.translateZ(500); 
 
     scene = new THREE.Scene();
@@ -118,7 +117,7 @@ function onDocumentDoubleClick(event) {;
     raycaster.setFromCamera(mouseVector, camera);
 
     var intersects = raycaster.intersectObjects(scene.children, true);
-    if (! isEmpty(intersects)) {
+    if (intersects.length > 0) {
 
         currentClicked = intersects[0].object;
         
@@ -195,13 +194,16 @@ function onDocumentMouseUp(event) {
     isClicking = false;
 }
 
+// Declarations outside function to avoid multiple redefinitions of variables
 var lastInputInside = 1;
 var mouseUnproj = new THREE.Vector3();
 var centerUnproj = new THREE.Vector3();
 function onDocumentMouseMove( event ) {
 
+    // Transforms the mouse position in normalized device coordinates
     mouseVector.x = ( event.clientX / window.innerWidth ) * 2 - 1;
     mouseVector.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+    
     raycaster.setFromCamera(mouseVector, camera);
 
     if (mode == "ROTATION"){ 
@@ -210,7 +212,8 @@ function onDocumentMouseMove( event ) {
             var intersects = raycaster.intersectObject(activeArcball);
         }
 
-        if (! isEmpty(intersects)){  
+        // If intersected the arcball
+        if (intersects != undefined && intersects.length > 0){  
             curIntersection.x = intersects[0].point.x
             curIntersection.y = intersects[0].point.y;
 
@@ -232,8 +235,8 @@ function onDocumentMouseMove( event ) {
                         interactiveBoxes.quaternion.multiplyQuaternions(quaternion, interactiveBoxes.quaternion);
                     }
                 }
-                var string = "IN";
-                console.log({string, axis, angle});
+                // var string = "IN";
+                // console.log({string, axis, angle});
             }
 
             lastIntersection.x = curIntersection.x;
@@ -278,8 +281,8 @@ function onDocumentMouseMove( event ) {
                         interactiveBoxes.quaternion.multiplyQuaternions(quaternion, interactiveBoxes.quaternion);
                     }
                 }
-                var string = "OUT";
-                console.log({string, axis, angle});
+                // var string = "OUT";
+                // console.log({string, axis, angle});
             }
 
             lastIntersection.x = curIntersection.x;
@@ -292,6 +295,7 @@ function onDocumentMouseMove( event ) {
 
 
 function onWindowResize() {
+    // Manipulates the camera so resizing has a consistent behaviour
 
     var aspect = window.innerWidth / window.innerHeight;
     camera.left = - frustumSize * aspect / 2;
@@ -304,6 +308,8 @@ function onWindowResize() {
 }
 
 function onDocumentMouseWheel(event) {
+    // Mouse Wheel regulates the zoom of the camera
+
     if (event.deltaY < 0) { 
         if (camera.zoom > 0.1)
             camera.zoom /= 1.25;
@@ -328,17 +334,5 @@ function animate() {
     //     intersect[0].object.position.setX(intersect[0].point.x);
     //     intersect[0].object.position.setY(intersect[0].point.y);
     // }
-
-
-    // interactiveBoxes.rotation.x += 0.05;
-    // interactiveBoxes.rotation.y += 0.05;
     renderer.render( scene, camera );
-}
-
-function isEmpty(obj) {
-    for(var key in obj) {
-        if(obj.hasOwnProperty(key))
-            return false;
-    }
-    return true;
 }
