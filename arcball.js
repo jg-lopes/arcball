@@ -5,6 +5,7 @@ var isClicking;
 var frustumSize = 40;
 
 var mouseVector = new THREE.Vector3();
+var mouseEvent = new THREE.Vector2();
 var quaternion = new THREE.Quaternion();
 var curIntersection = new THREE.Vector2();
 var lastIntersection = new THREE.Vector2();
@@ -14,6 +15,7 @@ var interactiveBoxes;
 var currentClicked;
 var activeArcball;
 
+var currentTranslating; 
 var mode = {};
 
 init();
@@ -98,6 +100,7 @@ function onDocumentMouseDown(event) {
 // Declares the ending of a click
 function onDocumentMouseUp(event) {
     isClicking = false;
+    currentTranslating = undefined;
 }
 
 // #############################################################################################
@@ -201,6 +204,8 @@ function createArcball(scaleVector, positionVector) {
 var lastInputInside = 1;
 function onDocumentMouseMove( event ) {
 
+    mouseEvent.x = event.clientX;
+    mouseEvent.y = event.clientY;
     // Transforms the mouse position in normalized device coordinates
     mouseVector.x = ( event.clientX / window.innerWidth ) * 2 - 1;
     mouseVector.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
@@ -348,6 +353,16 @@ function animate() {
     if ( intersect.length > 0 && isClicking && mode[intersect[0].object.id] == "TRANSLATE") {
         intersect[0].object.position.setX(intersect[0].point.x);
         intersect[0].object.position.setY(intersect[0].point.y);
-    } 
+        currentTranslating = intersect[0].object;
+        console.log(intersect[0].point);
+    } else if (intersect.length == 0 && currentTranslating != undefined) {
+        
+        mouseEvent = mouseVector.clone();
+        mouseEvent.unproject(camera);
+
+        currentTranslating.position.setX(mouseEvent.x);
+        currentTranslating.position.setY(mouseEvent.y);
+        console.log(mouseEvent);
+    }
     renderer.render( scene, camera );
 }
