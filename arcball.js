@@ -110,10 +110,6 @@ function experimentalBall(uv) {
 
 function onDocumentMouseDown(event) {
     isClicking = true;
-
-    
-    //console.log(pos);
-    console.log(vec);
 }
 
 objPosition = new THREE.Vector3();
@@ -308,15 +304,13 @@ function onWindowResize() {
 }
 
 function onDocumentMouseWheel(event) {
-
-
     if (event.deltaY < 0) { 
-        if (camera.zoom > 0.2)
-            camera.zoom -= 0.1;
+        if (camera.zoom > 0.1)
+            camera.zoom /= 1.25;
     };
     
     if (event.deltaY > 0) { 
-        camera.zoom += 0.1;
+        camera.zoom *= 1.25;
     };
     camera.updateProjectionMatrix();
 
