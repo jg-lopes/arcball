@@ -221,12 +221,14 @@ function onDocumentMouseMove( event ) {
                 
                 // Removes extreme rotations (due to unset last vectors or change between inside/outside, not user input)
                 if (lastInputInside == 1) {
-                    temp = interactiveBoxes.quaternion.clone();
-                    axis.applyQuaternion(temp.conjugate());
-                    quaternion.setFromAxisAngle(axis, angle);
+                    
                     if (currentClicked != interactiveBoxes) {
+                        temp = interactiveBoxes.quaternion.clone();
+                        axis.applyQuaternion(temp.conjugate());
+                        quaternion.setFromAxisAngle(axis, angle);
                         currentClicked.quaternion.multiplyQuaternions(quaternion, currentClicked.quaternion);
                     } else {
+                        quaternion.setFromAxisAngle(axis, angle);
                         interactiveBoxes.quaternion.multiplyQuaternions(quaternion, interactiveBoxes.quaternion);
                     }
                 }
@@ -266,13 +268,12 @@ function onDocumentMouseMove( event ) {
                 
                 // Removes extreme rotations (due to unset last vectors or change between inside/outside, not user input)
                 if (lastInputInside == 0) {
-                    temp = interactiveBoxes.quaternion.clone();
-                    axis.applyQuaternion(temp.conjugate());
-                    quaternion.setFromAxisAngle(axis, angle);
-                    quaternion.setFromAxisAngle(axis, angle);
                     if (currentClicked != interactiveBoxes) {
+                        temp = interactiveBoxes.quaternion.clone();
+                        axis.applyQuaternion(temp.conjugate());
+                        quaternion.setFromAxisAngle(axis, angle);
                         currentClicked.quaternion.multiplyQuaternions(quaternion, currentClicked.quaternion);
-                    }else {
+                    } else {
                         interactiveBoxes.quaternion.multiplyQuaternions(quaternion, interactiveBoxes.quaternion);
                     }
                 }
