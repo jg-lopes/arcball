@@ -15,16 +15,14 @@ var lastIntersection = new THREE.Vector2();
 // Father group that contains all boxes on screen
 var interactiveBoxes;
 
-// Stores the currently clicked (selected object)
-var currentClicked;
+// Stores the currently double clicked object
+var currentDoubleClicked;
 
 // Stores the currently active arcball (if available)
 var activeArcball;
 
-// Stores information on which object is being translated
-// In order to preserve the translation in edge cases (when mouse escapes the object or ....
-//  ... hovers over a second object while translating a first
-var currentTranslating; 
+// Stores information on which object was last clicked
+var currentClicked; 
 
 // Dictionary which stores the information 
 var mode = {};
@@ -112,7 +110,7 @@ function onDocumentMouseDown(event) {
     var intersects = raycaster.intersectObjects(scene.children, true);
 
     if (intersects.length > 0) {
-        currentTranslating = intersects[0].object;
+        currentClicked = intersects[0].object;
 
     }
 }
@@ -121,7 +119,7 @@ function onDocumentMouseDown(event) {
 function onDocumentMouseUp(event) {
     // Unsets the variables defined on mousedown
     isClicking = false;
-    currentTranslating = undefined;
+    currentClicked = undefined;
 
     // Resets intersections (prevents anomalous behaviour on the arcball after reclick)
     curIntersection = new THREE.Vector2();
@@ -140,7 +138,7 @@ function onDocumentDoubleClick(event) {
     scene.remove(scene.getObjectByName('arcball'));
     
     // Undefines translation from the first click (the user intended to do a doubleclick)
-    currentTranslating = undefined;
+    currentClicked = undefined;
 
     // Raycaster to discover intersections
     raycaster.setFromCamera(mouseVector, camera);
@@ -148,17 +146,17 @@ function onDocumentDoubleClick(event) {
 
     // If doubeclicked a box
     if (intersects.length > 0) {
-        currentClicked = intersects[0].object;
+        currentDoubleClicked = intersects[0].object;
         
         // Changes the box's mode
-        if (mode[currentClicked.id] == "ROTATE") {
-            mode[currentClicked.id] = "TRANSLATE";
+        if (mode[currentDoubleClicked.id] == "ROTATE") {
+            mode[currentDoubleClicked.id] = "TRANSLATE";
         } else {
-            mode[currentClicked.id] = "ROTATE";
+            mode[currentDoubleClicked.id] = "ROTATE";
         }
 
         // If mode is rotate, creates an arcball
-        if (mode[currentClicked.id] == "ROTATE") {
+        if (mode[currentDoubleClicked.id] == "ROTATE") {
             var objPosition = new THREE.Vector3();
 
             objScale = intersects[0].object.scale;
@@ -171,7 +169,7 @@ function onDocumentDoubleClick(event) {
     // If the doubleclick was in open space
     } else {
         // Selects the group -> needs to create group arcball
-        currentClicked = interactiveBoxes;
+        currentDoubleClicked = interactiveBoxes;
 
         var boxList = interactiveBoxes.children;
 
@@ -258,10 +256,15 @@ function onDocumentMouseMove( event ) {
     
     raycaster.setFromCamera(mouseVector, camera);
 
-    if (currentTranslating == activeArcball || mode[interactiveBoxes.id] == "ROTATE") {
-        if ( currentClicked != undefined && mode[currentClicked.id] == "ROTATE" ) {
+    // If the click was in an arcball or an object with rotate mode
+    if (currentClicked == activeArcball || mode[interactiveBoxes.id] == "ROTATE") {
+        // And the corresponding object exists and is in rotate mode
+        if ( currentDoubleClicked != undefined && mode[currentDoubleClicked.id] == "ROTATE" ) {
             var intersects = raycaster.intersectObject(activeArcball);
+
+            // If it intersects the arcball (mouseVector inside of arcball)
             if (intersects.length > 0){
+                // Operates such that it can work in multiple box positions
                 var temp = intersects[0].point.clone();
                 var objPosition = new THREE.Vector3();
                 scene.updateMatrixWorld();
@@ -339,11 +342,14 @@ function getCenterToMouseVector() {
 
 // Executes the rotation defined by axis angle in the clicked object
 function executeRotation(axis, angle) {
-    if (currentClicked != interactiveBoxes) {
+    if (currentDoubleClicked != interactiveBoxes) {
+        // Applies the conjugate of the rotation of the group
+        // Guarantees the principle of "What you see is what you get" in the manipulation of the box
         var temp = interactiveBoxes.quaternion.clone();
         axis.applyQuaternion(temp.conjugate());
+        
         quaternion.setFromAxisAngle(axis, angle);
-        currentClicked.quaternion.multiplyQuaternions(quaternion, currentClicked.quaternion);
+        currentDoubleClicked.quaternion.multiplyQuaternions(quaternion, currentDoubleClicked.quaternion);
     } else {
         quaternion.setFromAxisAngle(axis, angle);
         interactiveBoxes.quaternion.multiplyQuaternions(quaternion, interactiveBoxes.quaternion);
@@ -390,12 +396,12 @@ function animate() {
     raycaster.setFromCamera(mouseVector, camera);
     var intersect = raycaster.intersectObjects(interactiveBoxes.children);
     
-    if ( intersect.length > 0 && isClicking && currentTranslating == intersect[0].object && currentTranslating != activeArcball && mode[intersect[0].object.id] == "TRANSLATE") {
-        //var temp = intersects[0].point.clone();
-        //var objPosition = new THREE.Vector3();
-        //scene.updateMatrixWorld();
-        //objPosition.setFromMatrixPosition (intersects[0].object.matrixWorld);
-        //temp.sub(objPosition);
+    // Handles the intersection event
+    // If conditions are created to preserve interesting translation properties such as:
+    // 1. If a box is being translated, even when the mouse hovers another box it still keeps translating ONLY the first
+    // 2. If the mouse "escapes" the intersection of the box, the translation still continues
+    // 3. The behaviour is consistent even when another cube is in rotation
+    if ( intersect.length > 0 && isClicking && currentClicked == intersect[0].object && currentClicked != activeArcball && mode[intersect[0].object.id] == "TRANSLATE") {
     
         mouseEvent = mouseVector.clone();
         mouseEvent.unproject(camera);
@@ -408,9 +414,9 @@ function animate() {
         intersect[0].object.position.setZ(mouseEvent.z);
         
 
-        currentTranslating = intersect[0].object;
+        currentClicked = intersect[0].object;
 
-    } else if (intersect.length == 0 && currentTranslating != undefined && currentTranslating != activeArcball && mode[currentTranslating.id] == "TRANSLATE") {
+    } else if (intersect.length == 0 && currentClicked != undefined && currentClicked != activeArcball && mode[currentClicked.id] == "TRANSLATE") {
         
         mouseEvent = mouseVector.clone();
         mouseEvent.unproject(camera);
@@ -418,12 +424,9 @@ function animate() {
         var temp = interactiveBoxes.quaternion.clone();
         mouseEvent.applyQuaternion(temp.conjugate())
 
-        console.log(currentTranslating.position.x);
-        console.log(mouseEvent.x);
-
-        currentTranslating.position.setX(mouseEvent.x);
-        currentTranslating.position.setY(mouseEvent.y);
-        currentTranslating.position.setZ(mouseEvent.z);
+        currentClicked.position.setX(mouseEvent.x);
+        currentClicked.position.setY(mouseEvent.y);
+        currentClicked.position.setZ(mouseEvent.z);
     }
     renderer.render( scene, camera );
 }
