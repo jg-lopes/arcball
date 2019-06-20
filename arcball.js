@@ -323,17 +323,18 @@ function arcballManipulation (inputVector, lastInputInsideValue, desiredInputIns
 
 // Gets a vector pointing from the center of a arcball to the mouse position
 function getCenterToMouseVector() {
+    
+
     var mouse;
     var center = new THREE.Vector3();
     mouse = mouseVector.clone();
+    mouse.unproject(camera);
 
     scene.updateMatrixWorld();
     center.setFromMatrixPosition (activeArcball.matrixWorld);
-    center.unproject(camera).normalize(); 
-
+    
     mouse.z = 0;
     center.z = 0;
- 
 
 
     mouse.sub(center).normalize();
@@ -382,7 +383,7 @@ function onDocumentMouseWheel(event) {
     };
     
     if (event.deltaY > 0) { 
-        if (camera.zoom > 1)
+        if (camera.zoom > 0.1)
             camera.zoom /= 1.25;
     };
     camera.updateProjectionMatrix();
