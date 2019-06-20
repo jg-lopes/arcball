@@ -46,9 +46,9 @@ function createCube() {
 
     var box = new THREE.Mesh( geometry, material );
 
-    box.position.x = Math.random() * 30 - 15;
-    box.position.y = Math.random() * 30 - 15;
-    box.position.z = Math.random() * 30 - 15;
+    box.position.x = Math.random() * 20 - 10;
+    box.position.y = Math.random() * 20 - 10;
+    box.position.z = Math.random() * 20 - 10;
 
     box.rotation.x = Math.random() * 2 * Math.PI;
     box.rotation.y = Math.random() * 2 * Math.PI;
@@ -382,7 +382,7 @@ function onDocumentMouseWheel(event) {
     };
     
     if (event.deltaY > 0) { 
-        if (camera.zoom > 0.1)
+        if (camera.zoom > 1)
             camera.zoom /= 1.25;
     };
     camera.updateProjectionMatrix();
