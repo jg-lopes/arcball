@@ -1,21 +1,32 @@
-var containers;
 var camera, scene, raycaster, renderer;
-var mouse = new THREE.Vector2();
-var isClicking;
 var frustumSize = 40;
+var isClicking;
 
+// Stores the mouse vector in normalized device coordinates
 var mouseVector = new THREE.Vector3();
+// Stores the mouse vector in the event position
 var mouseEvent = new THREE.Vector3();
+// Stores the quaternion which is used in the rotations
 var quaternion = new THREE.Quaternion();
+// Stores the currrent and last intersections of the mouse with the arcball in order to calculate the rotation
 var curIntersection = new THREE.Vector2();
 var lastIntersection = new THREE.Vector2();
 
+// Father group that contains all boxes on screen
 var interactiveBoxes;
 
+// Stores the currently clicked (selected object)
 var currentClicked;
+
+// Stores the currently active arcball (if available)
 var activeArcball;
 
+// Stores information on which object is being translated
+// In order to preserve the translation in edge cases (when mouse escapes the object or ....
+//  ... hovers over a second object while translating a first
 var currentTranslating; 
+
+// Dictionary which stores the information 
 var mode = {};
 
 init();
@@ -45,9 +56,9 @@ function createCube() {
     box.rotation.y = Math.random() * 2 * Math.PI;
     box.rotation.z = Math.random() * 2 * Math.PI;
 
-    box.scale.x = Math.random() * 2 + 1;
-    box.scale.y = Math.random() * 2 + 1;
-    box.scale.z = Math.random() * 2 + 1;
+    box.scale.x = Math.random() * 5 + 1;
+    box.scale.y = Math.random() * 5 + 1;
+    box.scale.z = Math.random() * 5 + 1;
     
     mode[box.id] = "TRANSLATE";
 
@@ -56,9 +67,11 @@ function createCube() {
 
 
 function init() {
+    // Intialization function
 
     var aspect = window.innerWidth / window.innerHeight;
     camera = new THREE.OrthographicCamera( frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, 1, 1000 );
+    // Translates far on Z axis so that it can see the group arcball correctly even for a separeted group
     camera.translateZ(500); 
 
     scene = new THREE.Scene();
@@ -79,9 +92,6 @@ function init() {
 
     scene.add( interactiveBoxes );
 
-    // camera.zoom = 0.1;
-    // camera.updateProjectionMatrix();
-
     document.addEventListener( 'mousedown', onDocumentMouseDown, false);
     document.addEventListener( 'mouseup', onDocumentMouseUp, false);
     document.addEventListener( 'mousemove', onDocumentMouseMove, false );
@@ -94,48 +104,63 @@ function init() {
 
 // Declares the start of a click
 function onDocumentMouseDown(event) {
+    // Sets the isClicking variable and checks for the translation
+
     isClicking = true;
+
     raycaster.setFromCamera(mouseVector, camera);
     var intersects = raycaster.intersectObjects(scene.children, true);
 
     if (intersects.length > 0) {
         currentTranslating = intersects[0].object;
+
     }
 }
 
 // Declares the ending of a click
 function onDocumentMouseUp(event) {
+    // Unsets the variables defined on mousedown
     isClicking = false;
     currentTranslating = undefined;
+
+    // Resets intersections (prevents anomalous behaviour on the arcball after reclick)
+    curIntersection = new THREE.Vector2();
+    lastIntersection = new THREE.Vector2();
 }
 
 // #############################################################################################
 // Double click functions
 // #############################################################################################
 
-objPosition = new THREE.Vector3();
+
 function onDocumentDoubleClick(event) {
     // Removes previously placed arcball
-    scene.remove(scene.getObjectByName('arcball'));
     // This both allows the mouse to click objects "behind the arcball"
         // and as well allows for seamlessly changing active arcballs
+    scene.remove(scene.getObjectByName('arcball'));
     
+    // Undefines translation from the first click (the user intended to do a doubleclick)
     currentTranslating = undefined;
+
     // Raycaster to discover intersections
     raycaster.setFromCamera(mouseVector, camera);
     var intersects = raycaster.intersectObjects(scene.children, true);
 
+    // If doubeclicked a box
     if (intersects.length > 0) {
         currentClicked = intersects[0].object;
         
+        // Changes the box's mode
         if (mode[currentClicked.id] == "ROTATE") {
             mode[currentClicked.id] = "TRANSLATE";
         } else {
             mode[currentClicked.id] = "ROTATE";
         }
 
+        // If mode is rotate, creates an arcball
         if (mode[currentClicked.id] == "ROTATE") {
-        
+            var objPosition = new THREE.Vector3();
+
             objScale = intersects[0].object.scale;
             // Finds the position of the center of the object in the world coordinates
             scene.updateMatrixWorld();
@@ -143,11 +168,14 @@ function onDocumentDoubleClick(event) {
 
             createArcball(objScale, objPosition);
         }
+    // If the doubleclick was in open space
     } else {
+        // Selects the group -> needs to create group arcball
         currentClicked = interactiveBoxes;
 
         var boxList = interactiveBoxes.children;
 
+        // Resets all to rotate
         for (i = 0; i < boxList.length; i++ ){
             mode[boxList[i].id] = "ROTATE";
         }
@@ -188,10 +216,12 @@ function onDocumentDoubleClick(event) {
         maxDist *= 1.5;
         var maxDistVector = new THREE.Vector3(maxDist,maxDist,maxDist);
 
+        // Creates the group arcball
         createArcball(maxDistVector, positionArcball );
     }
 }
 
+// Creates the arcball object with a specific position and scale
 function createArcball(scaleVector, positionVector) {
     var sphereGeom = new THREE.SphereGeometry(1, 100, 100);
     var blueMaterial = new THREE.MeshBasicMaterial( { color: 0x000000, transparent: true, opacity: 0.3 } );
@@ -215,9 +245,11 @@ function createArcball(scaleVector, positionVector) {
 // #############################################################################################
 
 // Organizes behaviour generated by a mouse movement
+// Defines if the last input of the mouse was made inside or outside the arcball
 var lastInputInside = 1;
 function onDocumentMouseMove( event ) {
 
+    // Refreshes the data in the mouseEvent and mouseVector vectors
     mouseEvent.x = event.clientX;
     mouseEvent.y = event.clientY;
     // Transforms the mouse position in normalized device coordinates
@@ -226,7 +258,6 @@ function onDocumentMouseMove( event ) {
     
     raycaster.setFromCamera(mouseVector, camera);
 
-    //if (mode == "ROTATION"){ 
     if (currentTranslating == activeArcball || mode[interactiveBoxes.id] == "ROTATE") {
         if ( currentClicked != undefined && mode[currentClicked.id] == "ROTATE" ) {
             var intersects = raycaster.intersectObject(activeArcball);
@@ -246,9 +277,6 @@ function onDocumentMouseMove( event ) {
         }
     }
 
-        // If intersected the arcball
-        
-    //}
 }
 
 // Given a vector clicked outside the arcball, calculates the normalized vector for introducing rotations
